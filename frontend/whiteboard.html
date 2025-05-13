@@ -118,6 +118,10 @@
                     <span class="control-icon">💬</span>
                     <span class="control-name">Chat</span>
                 </button>
+                <button class="control-btn" data-control="record">
+                    <span class="control-icon">⚫</span>
+                    <span class="control-name">Record</span>
+                </button>
             </div>
             <div class="control-group">
                 <button class="control-btn end-call" data-control="end">
@@ -156,11 +160,53 @@
         </div>
     </div>
 
+    <!-- Recording Playback Modal -->
+    <div class="recording-modal" hidden>
+        <div class="recording-modal-content">
+            <div class="recording-modal-header">
+                <h2>Session Recording</h2>
+                <button class="close-recording-modal">&times;</button>
+            </div>
+            <div class="recording-modal-body">
+                <div class="recording-player">
+                    <video id="recording-player" controls></video>
+                </div>
+                <div class="recording-info">
+                    <h3 id="recording-title">Introduction to Algebra</h3>
+                    <p id="recording-date">Recorded on May 15, 2025</p>
+                    <p id="recording-duration">Duration: 45 minutes</p>
+                </div>
+                <div class="recording-controls">
+                    <button id="download-recording" class="primary-btn">Download Recording</button>
+                    <button id="share-recording" class="secondary-btn">Share Recording</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recordings List Modal -->
+    <div class="recordings-list-modal" hidden>
+        <div class="recordings-list-modal-content">
+            <div class="recordings-list-modal-header">
+                <h2>Your Recordings</h2>
+                <button class="close-recordings-list-modal">&times;</button>
+            </div>
+            <div class="recordings-list-modal-body">
+                <div class="recordings-list">
+                    <!-- Recordings will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Socket.io for real-time communication -->
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 
     <!-- WebRTC adapter for cross-browser compatibility -->
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+
+    <!-- RecordRTC for session recording -->
+    <script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
 
     <!-- Main application script -->
     <script src="whiteboard.js"></script>

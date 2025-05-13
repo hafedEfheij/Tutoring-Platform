@@ -330,19 +330,235 @@
     cursor: pointer;
 }
 
+/* Recording Modal */
+.recording-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.recording-modal-content {
+    background-color: white;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--box-shadow);
+}
+
+.recording-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.recording-modal-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.close-recording-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+.recording-modal-body {
+    padding: 1.5rem;
+}
+
+.recording-player {
+    margin-bottom: 1.5rem;
+}
+
+.recording-player video {
+    width: 100%;
+    border-radius: 0.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.recording-info {
+    margin-bottom: 1.5rem;
+}
+
+.recording-info h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.recording-info p {
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+
+.recording-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.recording-controls button {
+    flex: 1;
+    padding: 0.75rem;
+}
+
+/* Recordings List Modal */
+.recordings-list-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.recordings-list-modal-content {
+    background-color: white;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--box-shadow);
+}
+
+.recordings-list-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.recordings-list-modal-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.close-recordings-list-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+.recordings-list-modal-body {
+    padding: 1.5rem;
+}
+
+.recordings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recording-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.recording-item:hover {
+    box-shadow: var(--box-shadow);
+    transform: translateY(-2px);
+}
+
+.recording-item-thumbnail {
+    width: 120px;
+    height: 68px;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    margin-right: 1rem;
+}
+
+.recording-item-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recording-item-details {
+    flex: 1;
+}
+
+.recording-item-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.recording-item-info {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-light);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.recording-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.recording-item-actions button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+}
+
+/* Recording Indicator */
+.control-btn[data-control="record"].active .control-icon {
+    color: #ef4444;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .whiteboard-main {
         flex-direction: column;
     }
-    
+
     .video-container {
         width: 100%;
         flex-direction: row;
     }
-    
+
     .primary-video, .secondary-video {
         flex: 1;
+    }
+
+    .recording-controls {
+        flex-direction: column;
     }
 }
 
@@ -352,17 +568,29 @@
         align-items: flex-start;
         gap: 0.5rem;
     }
-    
+
     .session-participants {
         flex-direction: column;
         gap: 0.5rem;
     }
-    
+
     .control-btn {
         padding: 0.5rem;
     }
-    
+
     .control-name {
         display: none;
+    }
+
+    .recording-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .recording-item-thumbnail {
+        width: 100%;
+        height: auto;
+        margin-right: 0;
+        margin-bottom: 1rem;
     }
 }

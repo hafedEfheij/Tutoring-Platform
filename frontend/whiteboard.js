@@ -7,6 +7,13 @@ let peerConnection;
 let roomId;
 let userId;
 
+// Recording variables
+let mediaRecorder;
+let recordedChunks = [];
+let isRecording = false;
+let recordingStartTime;
+let recordings = [];
+
 // STUN servers for WebRTC
 const iceServers = {
     iceServers: [
@@ -19,6 +26,16 @@ const iceServers = {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Whiteboard Initialized');
 
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token || !user.id) {
+        // Redirect to login page if not logged in
+        window.location.href = 'login.html';
+        return;
+    }
+
     // Initialize whiteboard canvas
     initWhiteboard();
 
@@ -30,6 +47,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize WebRTC
     initWebRTC();
+
+    // Load recordings from localStorage
+    const savedRecordings = loadRecordings();
+    console.log(`Loaded ${savedRecordings.length} recordings from localStorage`);
+
+    // Add a button to the toolbar to show recordings list
+    const toolGroup = document.querySelector('.whiteboard-toolbar .tool-group:last-child');
+    const recordingsBtn = document.createElement('button');
+    recordingsBtn.className = 'tool-btn';
+    recordingsBtn.dataset.action = 'recordings';
+    recordingsBtn.innerHTML = `
+        <span class="tool-icon">🎬</span>
+        <span class="tool-name">Recordings</span>
+    `;
+    toolGroup.appendChild(recordingsBtn);
+
+    // Add event listener to show recordings list
+    recordingsBtn.addEventListener('click', () => {
+        showRecordingsListModal();
+    });
 });
 
 // Whiteboard variables
@@ -450,8 +487,15 @@ function initEventListeners() {
             } else if (control === 'chat') {
                 const chatPanel = document.querySelector('.chat-panel');
                 chatPanel.hidden = !chatPanel.hidden;
+            } else if (control === 'record') {
+                toggleRecording(button);
             } else if (control === 'end') {
                 if (confirm('Are you sure you want to end this session?')) {
+                    // Stop recording if active
+                    if (isRecording) {
+                        stopRecording();
+                    }
+
                     // Clean up WebRTC resources
                     if (localStream) {
                         localStream.getTracks().forEach(track => track.stop());
@@ -852,4 +896,296 @@ async function toggleScreenSharing(button) {
         console.error('Error toggling screen sharing:', error);
         alert('An error occurred while toggling screen sharing. Please try again.');
     }
+}
+
+// Toggle recording
+async function toggleRecording(button) {
+    try {
+        if (!isRecording) {
+            // Start recording
+            startRecording(button);
+        } else {
+            // Stop recording
+            stopRecording(button);
+        }
+    } catch (error) {
+        console.error('Error toggling recording:', error);
+        alert('An error occurred while toggling recording. Please try again.');
+    }
+}
+
+// Start recording
+async function startRecording(button) {
+    try {
+        // Create a combined stream with video and whiteboard
+        const videoElement = document.querySelector('.primary-video video');
+        const canvasElement = document.getElementById('whiteboard-canvas');
+
+        // Create a new canvas for combined recording
+        const recordingCanvas = document.createElement('canvas');
+        recordingCanvas.width = 1280;
+        recordingCanvas.height = 720;
+        const ctx = recordingCanvas.getContext('2d');
+
+        // Create a stream from the recording canvas
+        const recordingStream = recordingCanvas.captureStream(30); // 30 FPS
+
+        // Add audio track from local stream if available
+        if (localStream && localStream.getAudioTracks().length > 0) {
+            recordingStream.addTrack(localStream.getAudioTracks()[0]);
+        }
+
+        // Set up MediaRecorder
+        mediaRecorder = new MediaRecorder(recordingStream, {
+            mimeType: 'video/webm;codecs=vp9',
+            videoBitsPerSecond: 3000000 // 3 Mbps
+        });
+
+        // Clear recorded chunks
+        recordedChunks = [];
+
+        // Handle data available event
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        // Handle recording stop event
+        mediaRecorder.onstop = () => {
+            // Create a blob from the recorded chunks
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+            // Calculate recording duration
+            const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // Create a recording object
+            const recording = {
+                id: Date.now().toString(),
+                title: document.querySelector('.session-title').textContent,
+                date: new Date().toLocaleDateString(),
+                duration: durationText,
+                blob: blob,
+                url: URL.createObjectURL(blob)
+            };
+
+            // Add recording to the list
+            recordings.push(recording);
+
+            // Save recordings to localStorage (just the metadata, not the blob)
+            saveRecordings();
+
+            // Show recording modal
+            showRecordingModal(recording);
+        };
+
+        // Start recording
+        mediaRecorder.start(1000); // Capture in 1-second chunks
+        recordingStartTime = Date.now();
+        isRecording = true;
+
+        // Update button state
+        button.classList.add('active');
+        button.querySelector('.control-name').textContent = 'Stop Recording';
+
+        // Start the drawing loop for combined recording
+        drawRecordingFrame(ctx, videoElement, canvasElement);
+
+        console.log('Recording started');
+    } catch (error) {
+        console.error('Error starting recording:', error);
+        alert('Could not start recording. Please try again.');
+    }
+}
+
+// Stop recording
+function stopRecording(button) {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+
+        // Update button state
+        if (button) {
+            button.classList.remove('active');
+            button.querySelector('.control-name').textContent = 'Record';
+        }
+
+        console.log('Recording stopped');
+    }
+}
+
+// Draw frames for recording
+function drawRecordingFrame(ctx, videoElement, canvasElement) {
+    if (!isRecording) return;
+
+    // Clear the canvas
+    ctx.fillStyle = '#f0f2f5';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    // Draw video (left side)
+    if (videoElement.srcObject) {
+        ctx.drawImage(
+            videoElement,
+            0, 0, ctx.canvas.width / 2, ctx.canvas.height
+        );
+    }
+
+    // Draw whiteboard (right side)
+    ctx.drawImage(
+        canvasElement,
+        ctx.canvas.width / 2, 0, ctx.canvas.width / 2, ctx.canvas.height
+    );
+
+    // Draw session info
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, ctx.canvas.width, 40);
+
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.fillText(
+        document.querySelector('.session-title').textContent,
+        10, 25
+    );
+
+    ctx.fillText(
+        document.querySelector('.timer-value').textContent,
+        ctx.canvas.width - 100, 25
+    );
+
+    // Continue drawing frames
+    requestAnimationFrame(() => drawRecordingFrame(ctx, videoElement, canvasElement));
+}
+
+// Show recording modal
+function showRecordingModal(recording) {
+    const modal = document.querySelector('.recording-modal');
+    const player = document.getElementById('recording-player');
+    const title = document.getElementById('recording-title');
+    const date = document.getElementById('recording-date');
+    const duration = document.getElementById('recording-duration');
+    const downloadBtn = document.getElementById('download-recording');
+
+    // Set recording details
+    player.src = recording.url;
+    title.textContent = recording.title;
+    date.textContent = `Recorded on ${recording.date}`;
+    duration.textContent = `Duration: ${recording.duration}`;
+
+    // Set download button action
+    downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = recording.url;
+        a.download = `${recording.title.replace(/\s+/g, '-')}-${recording.id}.webm`;
+        a.click();
+    };
+
+    // Set share button action
+    const shareBtn = document.getElementById('share-recording');
+    shareBtn.onclick = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: recording.title,
+                text: `Check out my recorded tutoring session: ${recording.title}`,
+                url: window.location.href
+            }).catch(error => {
+                console.error('Error sharing recording:', error);
+                alert('Could not share recording. Please try again.');
+            });
+        } else {
+            alert('Web Share API not supported in your browser. You can download the recording and share it manually.');
+        }
+    };
+
+    // Show modal
+    modal.hidden = false;
+
+    // Add close button event listener
+    const closeBtn = document.querySelector('.close-recording-modal');
+    closeBtn.onclick = () => {
+        modal.hidden = true;
+        player.pause();
+    };
+}
+
+// Save recordings metadata to localStorage
+function saveRecordings() {
+    const recordingsData = recordings.map(recording => {
+        // Create a new object without the blob and URL
+        return {
+            id: recording.id,
+            title: recording.title,
+            date: recording.date,
+            duration: recording.duration
+        };
+    });
+
+    localStorage.setItem('recordings', JSON.stringify(recordingsData));
+}
+
+// Load recordings metadata from localStorage
+function loadRecordings() {
+    const recordingsData = JSON.parse(localStorage.getItem('recordings') || '[]');
+
+    // We can't restore the actual recordings (blobs) from localStorage
+    // This is just for showing the list of past recordings
+    return recordingsData;
+}
+
+// Show recordings list modal
+function showRecordingsListModal() {
+    const modal = document.querySelector('.recordings-list-modal');
+    const recordingsList = document.querySelector('.recordings-list');
+
+    // Clear existing items
+    recordingsList.innerHTML = '';
+
+    // Load recordings from localStorage
+    const savedRecordings = loadRecordings();
+
+    if (savedRecordings.length === 0) {
+        recordingsList.innerHTML = '<p>No recordings found.</p>';
+    } else {
+        // Add recordings to the list
+        savedRecordings.forEach(recording => {
+            const item = document.createElement('div');
+            item.className = 'recording-item';
+            item.innerHTML = `
+                <div class="recording-item-thumbnail">
+                    <img src="https://via.placeholder.com/120x68/eee/999?text=Recording" alt="Recording Thumbnail">
+                </div>
+                <div class="recording-item-details">
+                    <div class="recording-item-title">${recording.title}</div>
+                    <div class="recording-item-info">
+                        <span>${recording.date}</span>
+                        <span>${recording.duration}</span>
+                    </div>
+                    <div class="recording-item-actions">
+                        <button class="secondary-btn">View Details</button>
+                    </div>
+                </div>
+            `;
+
+            // Add click event to view details button
+            const viewBtn = item.querySelector('.secondary-btn');
+            viewBtn.onclick = () => {
+                // We can't actually play the recording from localStorage
+                // In a real app, you would fetch the recording from the server
+                alert('In a real application, this would load the recording from the server.');
+            };
+
+            recordingsList.appendChild(item);
+        });
+    }
+
+    // Show modal
+    modal.hidden = false;
+
+    // Add close button event listener
+    const closeBtn = document.querySelector('.close-recordings-list-modal');
+    closeBtn.onclick = () => {
+        modal.hidden = true;
+    };
 }

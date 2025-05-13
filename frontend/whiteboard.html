@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiteboard - TutorConnect</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="whiteboard.css">
+</head>
+<body class="whiteboard-page">
+    <header>
+        <nav>
+            <div class="logo">TutorConnect</div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="schedule.html">Schedule</a></li>
+                <li><a href="#" class="active">Whiteboard</a></li>
+            </ul>
+            <div class="user-menu">
+                <div class="user-avatar">
+                    <img src="https://via.placeholder.com/40" alt="User Avatar">
+                </div>
+                <div class="user-name">John Doe</div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="whiteboard-container">
+        <div class="session-info">
+            <div class="session-title">Introduction to Algebra</div>
+            <div class="session-participants">
+                <div class="participant">
+                    <img src="https://via.placeholder.com/30" alt="Tutor">
+                    <span>Dr. Sarah Johnson (Tutor)</span>
+                </div>
+                <div class="participant">
+                    <img src="https://via.placeholder.com/30" alt="Student">
+                    <span>John Doe (You)</span>
+                </div>
+            </div>
+            <div class="session-timer">
+                <span class="timer-icon">⏱️</span>
+                <span class="timer-value">00:45:30</span>
+            </div>
+        </div>
+
+        <div class="whiteboard-main">
+            <div class="video-container">
+                <div class="video-wrapper primary-video">
+                    <video poster="https://via.placeholder.com/640x360/eee/999?text=Tutor+Video"></video>
+                    <div class="video-label">Dr. Sarah Johnson</div>
+                </div>
+                <div class="video-wrapper secondary-video">
+                    <video poster="https://via.placeholder.com/240x135/eee/999?text=Your+Video"></video>
+                    <div class="video-label">You</div>
+                </div>
+            </div>
+
+            <div class="whiteboard-wrapper">
+                <div class="whiteboard-toolbar">
+                    <div class="tool-group">
+                        <button class="tool-btn active" data-tool="pen">
+                            <span class="tool-icon">✏️</span>
+                            <span class="tool-name">Pen</span>
+                        </button>
+                        <button class="tool-btn" data-tool="eraser">
+                            <span class="tool-icon">🧽</span>
+                            <span class="tool-name">Eraser</span>
+                        </button>
+                        <button class="tool-btn" data-tool="text">
+                            <span class="tool-icon">T</span>
+                            <span class="tool-name">Text</span>
+                        </button>
+                        <button class="tool-btn" data-tool="shape">
+                            <span class="tool-icon">⬜</span>
+                            <span class="tool-name">Shape</span>
+                        </button>
+                    </div>
+                    <div class="tool-group">
+                        <div class="color-picker">
+                            <button class="color-btn active" data-color="#000000" style="background-color: #000000;"></button>
+                            <button class="color-btn" data-color="#ff0000" style="background-color: #ff0000;"></button>
+                            <button class="color-btn" data-color="#0000ff" style="background-color: #0000ff;"></button>
+                            <button class="color-btn" data-color="#00aa00" style="background-color: #00aa00;"></button>
+                        </div>
+                    </div>
+                    <div class="tool-group">
+                        <button class="tool-btn" data-action="clear">
+                            <span class="tool-icon">🗑️</span>
+                            <span class="tool-name">Clear</span>
+                        </button>
+                        <button class="tool-btn" data-action="save">
+                            <span class="tool-icon">💾</span>
+                            <span class="tool-name">Save</span>
+                        </button>
+                    </div>
+                </div>
+                <canvas id="whiteboard-canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="session-controls">
+            <div class="control-group">
+                <button class="control-btn" data-control="mic">
+                    <span class="control-icon">🎤</span>
+                    <span class="control-name">Mute</span>
+                </button>
+                <button class="control-btn" data-control="camera">
+                    <span class="control-icon">📹</span>
+                    <span class="control-name">Camera</span>
+                </button>
+                <button class="control-btn" data-control="screen">
+                    <span class="control-icon">🖥️</span>
+                    <span class="control-name">Share</span>
+                </button>
+                <button class="control-btn" data-control="chat">
+                    <span class="control-icon">💬</span>
+                    <span class="control-name">Chat</span>
+                </button>
+            </div>
+            <div class="control-group">
+                <button class="control-btn end-call" data-control="end">
+                    <span class="control-icon">📞</span>
+                    <span class="control-name">End Call</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-panel" hidden>
+        <div class="chat-header">
+            <h3>Session Chat</h3>
+            <button class="close-chat">×</button>
+        </div>
+        <div class="chat-messages">
+            <div class="message tutor-message">
+                <div class="message-sender">Dr. Sarah Johnson</div>
+                <div class="message-content">Hello John! Let's start with the basics of algebra today.</div>
+                <div class="message-time">10:02 AM</div>
+            </div>
+            <div class="message student-message">
+                <div class="message-sender">You</div>
+                <div class="message-content">Sounds good! I've been having trouble with equations.</div>
+                <div class="message-time">10:03 AM</div>
+            </div>
+            <div class="message tutor-message">
+                <div class="message-sender">Dr. Sarah Johnson</div>
+                <div class="message-content">No problem, I'll explain step by step. Let's use the whiteboard.</div>
+                <div class="message-time">10:04 AM</div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="Type your message...">
+            <button class="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script src="whiteboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,368 @@
+/* Whiteboard Styles */
+.whiteboard-page {
+    background-color: #f0f2f5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.whiteboard-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* Session Info */
+.session-info {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+}
+
+.session-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.session-participants {
+    display: flex;
+    gap: 1rem;
+}
+
+.participant {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.participant img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.session-timer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Whiteboard Main */
+.whiteboard-main {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    height: calc(100vh - 200px);
+}
+
+/* Video Container */
+.video-container {
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.video-wrapper {
+    position: relative;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.video-wrapper video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.primary-video {
+    flex: 2;
+}
+
+.secondary-video {
+    flex: 1;
+}
+
+.video-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Whiteboard Wrapper */
+.whiteboard-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.whiteboard-toolbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tool-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tool-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tool-btn:hover {
+    background-color: #e9ecef;
+}
+
+.tool-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.tool-icon {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.tool-name {
+    font-size: 0.75rem;
+}
+
+.color-picker {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.color-btn.active {
+    border-color: var(--primary-color);
+}
+
+#whiteboard-canvas {
+    flex: 1;
+    background-color: white;
+}
+
+/* Session Controls */
+.session-controls {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.control-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+    background-color: #e9ecef;
+}
+
+.control-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.control-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.end-call {
+    background-color: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.end-call:hover {
+    background-color: #dc2626;
+}
+
+/* Chat Panel */
+.chat-panel {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    width: 300px;
+    height: 400px;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.close-chat {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.message {
+    max-width: 80%;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.tutor-message {
+    align-self: flex-start;
+    background-color: #f0f2f5;
+}
+
+.student-message {
+    align-self: flex-end;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.message-sender {
+    font-weight: 600;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.message-time {
+    font-size: 0.625rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.chat-input {
+    display: flex;
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem 0 0 0.375rem;
+    font-size: 0.875rem;
+}
+
+.send-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0 0.375rem 0.375rem 0;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .whiteboard-main {
+        flex-direction: column;
+    }
+    
+    .video-container {
+        width: 100%;
+        flex-direction: row;
+    }
+    
+    .primary-video, .secondary-video {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .session-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .session-participants {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .control-btn {
+        padding: 0.5rem;
+    }
+    
+    .control-name {
+        display: none;
+    }
+}

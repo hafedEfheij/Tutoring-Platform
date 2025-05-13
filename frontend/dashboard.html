@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TutorConnect</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="dashboard-page">
+    <header>
+        <nav>
+            <div class="logo">TutorConnect</div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="schedule.html">Schedule</a></li>
+                <li><a href="whiteboard.html">Whiteboard</a></li>
+            </ul>
+            <div class="user-menu">
+                <div class="user-avatar">
+                    <img src="https://via.placeholder.com/40" alt="User Avatar">
+                </div>
+                <div class="user-name">John Doe</div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="active"><a href="#"><span class="icon">📊</span> Overview</a></li>
+                <li><a href="#"><span class="icon">📝</span> My Sessions</a></li>
+                <li><a href="#"><span class="icon">📅</span> Calendar</a></li>
+                <li><a href="#"><span class="icon">💬</span> Messages</a></li>
+                <li><a href="#"><span class="icon">⚙️</span> Settings</a></li>
+            </ul>
+        </aside>
+
+        <main class="dashboard-main">
+            <div class="dashboard-header">
+                <h1>Welcome back, John!</h1>
+                <p>Here's what's happening with your learning journey.</p>
+            </div>
+
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Completed Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Upcoming Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Hours Learned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4.8</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+
+            <section class="upcoming-sessions">
+                <div class="section-header">
+                    <h2>Upcoming Sessions</h2>
+                    <a href="#" class="view-all">View All</a>
+                </div>
+                <div class="session-cards">
+                    <div class="session-card">
+                        <div class="session-time">
+                            <div class="date">May 15, 2025</div>
+                            <div class="time">10:00 AM - 11:00 AM</div>
+                        </div>
+                        <div class="session-details">
+                            <div class="session-title">Introduction to Algebra</div>
+                            <div class="tutor-name">with Dr. Sarah Johnson</div>
+                        </div>
+                        <div class="session-actions">
+                            <button class="primary-btn">Join Session</button>
+                            <button class="secondary-btn">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="session-card">
+                        <div class="session-time">
+                            <div class="date">May 17, 2025</div>
+                            <div class="time">2:00 PM - 3:00 PM</div>
+                        </div>
+                        <div class="session-details">
+                            <div class="session-title">Advanced Calculus</div>
+                            <div class="tutor-name">with Prof. Michael Chen</div>
+                        </div>
+                        <div class="session-actions">
+                            <button class="primary-btn">Join Session</button>
+                            <button class="secondary-btn">Reschedule</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="recommended-tutors">
+                <div class="section-header">
+                    <h2>Recommended Tutors</h2>
+                    <a href="#" class="view-all">View All</a>
+                </div>
+                <div class="tutor-cards">
+                    <div class="tutor-card">
+                        <div class="tutor-avatar">
+                            <img src="https://via.placeholder.com/80" alt="Tutor Avatar">
+                        </div>
+                        <div class="tutor-info">
+                            <div class="tutor-name">Dr. Emily Wilson</div>
+                            <div class="tutor-subject">Physics</div>
+                            <div class="tutor-rating">⭐ 4.9 (120 reviews)</div>
+                        </div>
+                        <button class="primary-btn">Book Session</button>
+                    </div>
+                    <div class="tutor-card">
+                        <div class="tutor-avatar">
+                            <img src="https://via.placeholder.com/80" alt="Tutor Avatar">
+                        </div>
+                        <div class="tutor-info">
+                            <div class="tutor-name">Prof. David Lee</div>
+                            <div class="tutor-subject">Chemistry</div>
+                            <div class="tutor-rating">⭐ 4.8 (95 reviews)</div>
+                        </div>
+                        <button class="primary-btn">Book Session</button>
+                    </div>
+                    <div class="tutor-card">
+                        <div class="tutor-avatar">
+                            <img src="https://via.placeholder.com/80" alt="Tutor Avatar">
+                        </div>
+                        <div class="tutor-info">
+                            <div class="tutor-name">Dr. Maria Rodriguez</div>
+                            <div class="tutor-subject">Biology</div>
+                            <div class="tutor-rating">⭐ 4.7 (108 reviews)</div>
+                        </div>
+                        <button class="primary-btn">Book Session</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

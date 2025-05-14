@@ -164,6 +164,6 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Check if we're on the OAuth callback page
-if (window.location.pathname === '/oauth-success') {
+if (window.location.pathname === '/oauth-success.html' || window.location.pathname.includes('oauth-success')) {
     window.TutorConnect.oauthLogin.handleCallback();
 }

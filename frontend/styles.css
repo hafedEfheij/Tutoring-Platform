@@ -212,8 +212,20 @@ nav ul li a.active {
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 4rem 2rem;
-    gap: 2rem;
+    padding: 6rem 2rem 4rem;
+    gap: 3rem;
+    position: relative;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    opacity: 0.3;
 }
 
 .hero-content {
@@ -221,26 +233,79 @@ nav ul li a.active {
 }
 
 .hero-content h1 {
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 1rem;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
 }
 
 .hero-content p {
     font-size: 1.25rem;
     color: var(--text-light);
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    max-width: 90%;
+    line-height: 1.6;
+}
+
+.hero-content .primary-btn {
+    padding: 0.875rem 2rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-radius: 50px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-content .primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .hero-image {
     flex: 1;
+    position: relative;
+}
+
+.hero-image::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--primary-color);
+    border-radius: 0.5rem;
+    z-index: -1;
+    opacity: 0.3;
 }
 
 .hero-image img {
     width: 100%;
     border-radius: 0.5rem;
     box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease;
+}
+
+.hero-image:hover img {
+    transform: scale(1.02);
+}
+
+/* Dark mode support for hero section */
+@media (prefers-color-scheme: dark) {
+    .hero-content h1 {
+        background: linear-gradient(135deg, #818cf8, #6366f1);
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+
+    .hero::after {
+        background: linear-gradient(90deg, transparent, #6366f1, transparent);
+    }
 }
 
 /* Features Section */

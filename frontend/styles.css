@@ -786,10 +786,21 @@ legend {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"%3E%3Cpath fill="%23ffffff" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,213.3C1248,235,1344,213,1392,202.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"%3E%3C/path%3E%3C/svg%3E');
+    background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"%3E%3Cpath fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,213.3C1248,235,1344,213,1392,202.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"%3E%3C/path%3E%3C/svg%3E');
     background-size: cover;
     background-position: center;
-    opacity: 0.1;
+    opacity: 0.2;
+}
+
+.cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.2));
+    opacity: 0.4;
 }
 
 .cta-content {
@@ -797,23 +808,31 @@ legend {
     margin: 0 auto;
     text-align: center;
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    background: rgba(79, 70, 229, 0.1);
+    padding: 3rem;
+    border-radius: 1rem;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .cta-content h2 {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
     font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.02em;
 }
 
 .cta-content p {
     margin-bottom: 2.5rem;
     font-size: 1.25rem;
-    opacity: 0.9;
+    opacity: 0.95;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    line-height: 1.6;
 }
 
 .cta-content .primary-btn {
@@ -825,12 +844,30 @@ legend {
     border-radius: 50px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-content .primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
 }
 
 .cta-content .primary-btn:hover {
     background-color: rgba(255, 255, 255, 0.95);
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cta-content .primary-btn:hover::before {
+    transform: translateX(100%);
 }
 
 /* Button Styles */
@@ -878,8 +915,8 @@ legend {
         padding: 1.5rem;
         gap: 1.5rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transform: translateY(-100%);
-        transition: transform 0.3s ease;
+        transform: translateY(-150%);
+        transition: transform 0.3s ease, opacity 0.3s ease;
         z-index: 15;
         opacity: 0;
     }
@@ -890,12 +927,13 @@ legend {
         opacity: 1;
     }
 
-    /* Dark mode support for mobile menu */
-    @media (prefers-color-scheme: dark) {
-        nav ul {
-            background-color: #1f2937;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
+    /* Fix hamburger animation */
+    .mobile-menu-toggle[aria-expanded="true"] .hamburger::before {
+        transform: translateY(0) rotate(45deg);
+    }
+
+    .mobile-menu-toggle[aria-expanded="true"] .hamburger::after {
+        transform: translateY(0) rotate(-45deg);
     }
 
     nav {
@@ -906,6 +944,7 @@ legend {
         z-index: 20;
     }
 
+    /* Hero section mobile fixes */
     .hero, .feature-cards {
         flex-direction: column;
     }
@@ -913,6 +952,7 @@ legend {
     .hero {
         padding: 2rem 1rem;
         text-align: center;
+        gap: 1.5rem;
     }
 
     .hero-content {
@@ -921,21 +961,79 @@ legend {
 
     .hero-image {
         order: 0;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
+        width: 100%;
     }
 
     .hero-content h1 {
         font-size: 2rem;
+        margin-bottom: 1rem;
     }
 
+    .hero-content p {
+        font-size: 1.125rem;
+        margin-bottom: 1.5rem;
+        max-width: 100%;
+    }
+
+    .hero-content .primary-btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    /* Feature cards mobile fixes */
+    .feature-card {
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
+
+    .feature-card:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Steps section mobile fixes */
     .steps {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 
+    .step {
+        padding: 1.25rem;
+    }
+
+    /* Testimonials mobile fixes */
     .testimonial-cards {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 
+    .testimonial-card {
+        padding: 1.25rem;
+    }
+
+    /* CTA section mobile fixes */
+    .cta {
+        padding: 3rem 1.5rem;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-content p {
+        font-size: 1.125rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-content .primary-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    /* Footer mobile fixes */
     .footer-content {
         flex-direction: column;
         gap: 2rem;
@@ -944,6 +1042,16 @@ legend {
     .footer-links {
         flex-direction: column;
         gap: 2rem;
+    }
+
+    .footer-column {
+        text-align: center;
+    }
+
+    .footer-column ul {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     .modal-content {
@@ -961,6 +1069,20 @@ legend {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+    }
+}
+
+/* Dark mode support for mobile menu */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+    nav ul {
+        background-color: #1f2937;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .hamburger,
+    .hamburger::before,
+    .hamburger::after {
+        background-color: #f9fafb;
     }
 }
 

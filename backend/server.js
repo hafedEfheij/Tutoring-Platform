@@ -22,8 +22,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000',
-        methods: ["GET", "POST"],
+        origin: process.env.NODE_ENV === 'production'
+            ? 'https://your-domain.com'
+            : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true
     }
 });
@@ -51,9 +53,12 @@ const authLimiter = rateLimit({
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'production'
+        ? 'https://your-domain.com'
+        : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 };
 app.use(cors(corsOptions));
 

@@ -21,6 +21,10 @@
             --text-color: #1f2937;
             --text-light: #6b7280;
             --border-color: #e5e7eb;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
         }
         body {
             margin: 0;
@@ -57,11 +61,37 @@
             margin: 0 auto;
             padding: 1rem 2rem;
         }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #6366f1;
+                --primary-hover: #4f46e5;
+                --secondary-color: #111827;
+                --text-color: #f9fafb;
+                --text-light: #9ca3af;
+                --border-color: #374151;
+            }
+            body {
+                background-color: #111827;
+            }
+            header {
+                background-color: #1f2937;
+            }
+        }
     </style>
 
     <!-- Non-critical CSS with preload -->
     <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    <link rel="preload" href="ui-utils.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="ui-utils.css">
+    </noscript>
+
+    <!-- Theme color meta tag for dark mode -->
+    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
 </head>
 <body>
     <header role="banner">
@@ -233,7 +263,27 @@
         if (isMobile) {
             document.documentElement.classList.add('mobile');
         }
+
+        // Add dark mode detection
+        const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDarkMode) {
+            document.documentElement.classList.add('dark-mode');
+        }
+
+        // Listen for dark mode changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark-mode');
+                } else {
+                    document.documentElement.classList.remove('dark-mode');
+                }
+            });
+        }
     </script>
+
+    <!-- UI Utilities script -->
+    <script src="ui-utils.js" defer></script>
 
     <!-- Main application script with defer for non-blocking loading -->
     <script src="app.js" defer></script>
@@ -241,6 +291,7 @@
     <!-- Preload important scripts that might be needed later -->
     <link rel="prefetch" href="login.html">
     <link rel="prefetch" href="dashboard.html">
+    <link rel="prefetch" href="auth.js">
 
     <!-- Intersection Observer polyfill for older browsers -->
     <script>
@@ -273,6 +324,22 @@
                     img.src = img.getAttribute('data-src');
                     img.removeAttribute('data-src');
                 });
+            }
+
+            // Show welcome toast for first-time visitors
+            if (window.TutorConnect && window.TutorConnect.ui) {
+                // Check if this is the first visit
+                if (!localStorage.getItem('visited')) {
+                    // Show welcome toast
+                    window.TutorConnect.ui.toast.show(
+                        'Welcome to TutorConnect! Explore our platform to find the perfect tutor for your needs.',
+                        'info',
+                        5000
+                    );
+
+                    // Set visited flag
+                    localStorage.setItem('visited', 'true');
+                }
             }
         });
     </script>

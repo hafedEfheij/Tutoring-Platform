@@ -6,6 +6,9 @@
 // Initialize global namespace
 window.TutorConnect = window.TutorConnect || {};
 
+// Make sure the auth module is available
+window.TutorConnect.auth = window.TutorConnect.auth || {};
+
 // OAuth Login Component
 window.TutorConnect.oauthLogin = {
     // Initialize OAuth login buttons

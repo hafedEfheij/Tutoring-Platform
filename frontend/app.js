@@ -215,22 +215,29 @@ function initMobileMenu() {
     const menuToggle = document.querySelector('.mobile-menu-toggle');
     const mainMenu = document.getElementById('main-menu');
 
-    if (!menuToggle) return;
+    if (!menuToggle || !mainMenu) return;
 
-    // Show the menu toggle button
-    menuToggle.hidden = false;
-
+    // Add click event listener to toggle menu
     menuToggle.addEventListener('click', () => {
         const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
         menuToggle.setAttribute('aria-expanded', !isExpanded);
+    });
 
-        // Close menu when clicking on a link
-        const menuLinks = mainMenu.querySelectorAll('a');
-        menuLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                menuToggle.setAttribute('aria-expanded', 'false');
-            });
+    // Add click event listeners to menu links
+    const menuLinks = mainMenu.querySelectorAll('a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            menuToggle.setAttribute('aria-expanded', 'false');
         });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (menuToggle.getAttribute('aria-expanded') === 'true' &&
+            !mainMenu.contains(e.target) &&
+            !menuToggle.contains(e.target)) {
+            menuToggle.setAttribute('aria-expanded', 'false');
+        }
     });
 
     // Close menu when pressing Escape key

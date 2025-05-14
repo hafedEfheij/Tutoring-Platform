@@ -241,7 +241,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         });
 
         // Redirect to frontend with token
-        res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${accessToken}`);
+        res.redirect(`http://localhost:3000/oauth-success.html?token=${accessToken}`);
     });
 }
 
@@ -284,7 +284,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         });
 
         // Redirect to frontend with token
-        res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${accessToken}`);
+        res.redirect(`http://localhost:3000/oauth-success.html?token=${accessToken}`);
     });
 }
 

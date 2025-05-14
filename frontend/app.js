@@ -40,7 +40,9 @@ if (window.performance && window.performance.mark) {
     // DOM Elements - use function to defer execution until needed
     const getElements = () => ({
         loginBtn: document.getElementById('login-btn'),
-        signupBtn: document.getElementById('signup-btn')
+        signupBtn: document.getElementById('signup-btn'),
+        getStartedBtn: document.getElementById('get-started-btn'),
+        getStartedNowBtn: document.getElementById('get-started-now-btn')
     });
 
     // Event Listeners
@@ -99,6 +101,80 @@ if (window.performance && window.performance.mark) {
         // Signup button click event - lazy load the auth module
         if (elements.signupBtn) {
             elements.signupBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Show loading indicator
+                const loadingIndicator = createLoadingIndicator('Loading signup form...');
+
+                // Load auth module and show signup modal
+                modules.load('auth').then(() => {
+                    // Hide loading indicator
+                    if (window.TutorConnect && window.TutorConnect.ui) {
+                        window.TutorConnect.ui.loader.hide(loadingIndicator);
+                    } else if (loadingIndicator.parentNode) {
+                        loadingIndicator.parentNode.removeChild(loadingIndicator);
+                    }
+
+                    // Show signup modal
+                    showSignupModal();
+
+                    // Show notification
+                    showNotification('Signup form loaded successfully', 'info');
+                }).catch(error => {
+                    // Hide loading indicator
+                    if (window.TutorConnect && window.TutorConnect.ui) {
+                        window.TutorConnect.ui.loader.hide(loadingIndicator);
+                    } else if (loadingIndicator.parentNode) {
+                        loadingIndicator.parentNode.removeChild(loadingIndicator);
+                    }
+
+                    // Show error notification
+                    showNotification('Failed to load signup form. Please try again.', 'error');
+                    console.error('Error loading auth module:', error);
+                });
+            });
+        }
+
+        // Get Started button click event - show signup modal
+        if (elements.getStartedBtn) {
+            elements.getStartedBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Show loading indicator
+                const loadingIndicator = createLoadingIndicator('Loading signup form...');
+
+                // Load auth module and show signup modal
+                modules.load('auth').then(() => {
+                    // Hide loading indicator
+                    if (window.TutorConnect && window.TutorConnect.ui) {
+                        window.TutorConnect.ui.loader.hide(loadingIndicator);
+                    } else if (loadingIndicator.parentNode) {
+                        loadingIndicator.parentNode.removeChild(loadingIndicator);
+                    }
+
+                    // Show signup modal
+                    showSignupModal();
+
+                    // Show notification
+                    showNotification('Signup form loaded successfully', 'info');
+                }).catch(error => {
+                    // Hide loading indicator
+                    if (window.TutorConnect && window.TutorConnect.ui) {
+                        window.TutorConnect.ui.loader.hide(loadingIndicator);
+                    } else if (loadingIndicator.parentNode) {
+                        loadingIndicator.parentNode.removeChild(loadingIndicator);
+                    }
+
+                    // Show error notification
+                    showNotification('Failed to load signup form. Please try again.', 'error');
+                    console.error('Error loading auth module:', error);
+                });
+            });
+        }
+
+        // Get Started Now button click event - show signup modal
+        if (elements.getStartedNowBtn) {
+            elements.getStartedNowBtn.addEventListener('click', (e) => {
                 e.preventDefault();
 
                 // Show loading indicator

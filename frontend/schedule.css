@@ -123,25 +123,34 @@
 .session-item {
     display: flex;
     gap: 1rem;
-    padding-bottom: 1rem;
+    padding: 0.75rem;
     border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+
+.session-item:hover {
+    background-color: var(--secondary-color);
+    transform: translateX(5px);
 }
 
 .session-item:last-child {
     border-bottom: none;
-    padding-bottom: 0;
 }
 
 .session-date {
     width: 50px;
     height: 50px;
-    background-color: var(--secondary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
     border-radius: 0.5rem;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: 600;
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .session-info {
@@ -271,15 +280,18 @@
     margin: 0 0.25rem;
     background-color: rgba(79, 70, 229, 0.1);
     border-left: 3px solid var(--primary-color);
-    border-radius: 0.25rem;
-    padding: 0.5rem;
+    border-radius: 0.375rem;
+    padding: 0.75rem 0.5rem;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .event:hover {
     background-color: rgba(79, 70, 229, 0.2);
+    transform: translateX(3px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .event-time {
@@ -658,5 +670,123 @@
 
     .day-column {
         min-width: 150px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .schedule-page {
+        background-color: #111827;
+    }
+
+    .calendar-mini,
+    .upcoming-sessions-mini,
+    .schedule-main {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+
+    .day-column,
+    .day-header,
+    .calendar-day:hover,
+    .session-item:hover,
+    .integration-option,
+    .calendar-export {
+        background-color: #111827;
+        border-color: #374151;
+    }
+
+    .session-date {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+    }
+
+    .event {
+        background-color: rgba(99, 102, 241, 0.2);
+        border-color: #6366f1;
+    }
+
+    .event:hover {
+        background-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .view-btn {
+        color: #f9fafb;
+    }
+
+    .view-selector {
+        border-color: #374151;
+    }
+
+    .integration-btn {
+        background-color: #374151;
+        color: #f9fafb;
+    }
+
+    .integration-btn:hover {
+        background-color: #4f46e5;
+    }
+
+    .calendar-export {
+        background-color: #111827;
+    }
+
+    .session-title,
+    .current-month,
+    .current-week,
+    .current-month-large,
+    .schedule-header h1,
+    .calendar-integration h2,
+    .calendar-integration h3,
+    .calendar-export h3,
+    .integration-details h3,
+    .day-name {
+        color: #f9fafb;
+    }
+
+    .session-time,
+    .day-date,
+    .event-time,
+    .event-tutor,
+    .time-indicator,
+    .calendar-integration p,
+    .calendar-export p,
+    .integration-details p {
+        color: #9ca3af;
+    }
+
+    .modal-content {
+        background-color: #1f2937;
+    }
+
+    .modal-header {
+        border-color: #374151;
+    }
+
+    .modal-header h2 {
+        color: #f9fafb;
+    }
+
+    .close-modal {
+        color: #9ca3af;
+    }
+
+    /* FullCalendar dark mode */
+    .fc-theme-standard td,
+    .fc-theme-standard th,
+    .fc-theme-standard .fc-scrollgrid {
+        border-color: #374151;
+    }
+
+    .fc .fc-daygrid-day-number,
+    .fc .fc-col-header-cell-cushion {
+        color: #f9fafb;
+    }
+
+    .fc-daygrid-day-frame {
+        background-color: #1f2937;
+    }
+
+    .fc-day-today .fc-daygrid-day-frame {
+        background-color: rgba(99, 102, 241, 0.1) !important;
     }
 }

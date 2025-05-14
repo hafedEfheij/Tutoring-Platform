@@ -69,32 +69,19 @@ if (window.performance && window.performance.mark) {
                 // Show loading indicator
                 const loadingIndicator = createLoadingIndicator('Loading login form...');
 
-                // Load auth module and show login modal
-                modules.load('auth').then(() => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
+                // Use auth module directly since it's now loaded via script tag
+                // Hide loading indicator
+                if (window.TutorConnect && window.TutorConnect.ui) {
+                    window.TutorConnect.ui.loader.hide(loadingIndicator);
+                } else if (loadingIndicator.parentNode) {
+                    loadingIndicator.parentNode.removeChild(loadingIndicator);
+                }
 
-                    // Show login modal
-                    showLoginModal();
+                // Show login modal
+                showLoginModal();
 
-                    // Show notification
-                    showNotification('Login form loaded successfully', 'info');
-                }).catch(error => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
-
-                    // Show error notification
-                    showNotification('Failed to load login form. Please try again.', 'error');
-                    console.error('Error loading auth module:', error);
-                });
+                // Show notification
+                showNotification('Login form loaded successfully', 'info');
             });
         }
 
@@ -106,32 +93,19 @@ if (window.performance && window.performance.mark) {
                 // Show loading indicator
                 const loadingIndicator = createLoadingIndicator('Loading signup form...');
 
-                // Load auth module and show signup modal
-                modules.load('auth').then(() => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
+                // Use auth module directly since it's now loaded via script tag
+                // Hide loading indicator
+                if (window.TutorConnect && window.TutorConnect.ui) {
+                    window.TutorConnect.ui.loader.hide(loadingIndicator);
+                } else if (loadingIndicator.parentNode) {
+                    loadingIndicator.parentNode.removeChild(loadingIndicator);
+                }
 
-                    // Show signup modal
-                    showSignupModal();
+                // Show signup modal
+                showSignupModal();
 
-                    // Show notification
-                    showNotification('Signup form loaded successfully', 'info');
-                }).catch(error => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
-
-                    // Show error notification
-                    showNotification('Failed to load signup form. Please try again.', 'error');
-                    console.error('Error loading auth module:', error);
-                });
+                // Show notification
+                showNotification('Signup form loaded successfully', 'info');
             });
         }
 
@@ -143,32 +117,19 @@ if (window.performance && window.performance.mark) {
                 // Show loading indicator
                 const loadingIndicator = createLoadingIndicator('Loading signup form...');
 
-                // Load auth module and show signup modal
-                modules.load('auth').then(() => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
+                // Use auth module directly since it's now loaded via script tag
+                // Hide loading indicator
+                if (window.TutorConnect && window.TutorConnect.ui) {
+                    window.TutorConnect.ui.loader.hide(loadingIndicator);
+                } else if (loadingIndicator.parentNode) {
+                    loadingIndicator.parentNode.removeChild(loadingIndicator);
+                }
 
-                    // Show signup modal
-                    showSignupModal();
+                // Show signup modal
+                showSignupModal();
 
-                    // Show notification
-                    showNotification('Signup form loaded successfully', 'info');
-                }).catch(error => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
-
-                    // Show error notification
-                    showNotification('Failed to load signup form. Please try again.', 'error');
-                    console.error('Error loading auth module:', error);
-                });
+                // Show notification
+                showNotification('Signup form loaded successfully', 'info');
             });
         }
 
@@ -180,32 +141,19 @@ if (window.performance && window.performance.mark) {
                 // Show loading indicator
                 const loadingIndicator = createLoadingIndicator('Loading signup form...');
 
-                // Load auth module and show signup modal
-                modules.load('auth').then(() => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
+                // Use auth module directly since it's now loaded via script tag
+                // Hide loading indicator
+                if (window.TutorConnect && window.TutorConnect.ui) {
+                    window.TutorConnect.ui.loader.hide(loadingIndicator);
+                } else if (loadingIndicator.parentNode) {
+                    loadingIndicator.parentNode.removeChild(loadingIndicator);
+                }
 
-                    // Show signup modal
-                    showSignupModal();
+                // Show signup modal
+                showSignupModal();
 
-                    // Show notification
-                    showNotification('Signup form loaded successfully', 'info');
-                }).catch(error => {
-                    // Hide loading indicator
-                    if (window.TutorConnect && window.TutorConnect.ui) {
-                        window.TutorConnect.ui.loader.hide(loadingIndicator);
-                    } else if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
-
-                    // Show error notification
-                    showNotification('Failed to load signup form. Please try again.', 'error');
-                    console.error('Error loading auth module:', error);
-                });
+                // Show notification
+                showNotification('Signup form loaded successfully', 'info');
             });
         }
 

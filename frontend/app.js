@@ -303,9 +303,16 @@ function showLoginModal() {
 
         // Add OAuth login buttons if available
         const oauthContainer = modal.element.querySelector('#oauth-login-container');
-        if (oauthContainer && window.TutorConnect.oauthLogin) {
-            const oauthButtons = window.TutorConnect.oauthLogin.init();
-            oauthContainer.appendChild(oauthButtons);
+        if (oauthContainer) {
+            // Wait for the OAuth script to load
+            setTimeout(() => {
+                if (window.TutorConnect && window.TutorConnect.oauthLogin) {
+                    const oauthButtons = window.TutorConnect.oauthLogin.init();
+                    oauthContainer.appendChild(oauthButtons);
+                } else {
+                    console.error('OAuth login module not available');
+                }
+            }, 500);
         }
 
         // Add event listener for switch to signup
@@ -649,9 +656,16 @@ function showSignupModal() {
 
         // Add OAuth login buttons if available
         const oauthContainer = modal.element.querySelector('#oauth-signup-container');
-        if (oauthContainer && window.TutorConnect.oauthLogin) {
-            const oauthButtons = window.TutorConnect.oauthLogin.init();
-            oauthContainer.appendChild(oauthButtons);
+        if (oauthContainer) {
+            // Wait for the OAuth script to load
+            setTimeout(() => {
+                if (window.TutorConnect && window.TutorConnect.oauthLogin) {
+                    const oauthButtons = window.TutorConnect.oauthLogin.init();
+                    oauthContainer.appendChild(oauthButtons);
+                } else {
+                    console.error('OAuth login module not available');
+                }
+            }, 500);
         }
 
         // Add event listener for switch to login

@@ -127,6 +127,13 @@ nav {
     cursor: pointer;
     padding: 0;
     z-index: 20;
+    position: relative;
+}
+
+.mobile-menu-toggle:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
 .hamburger {
@@ -162,11 +169,11 @@ nav {
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger::before {
-    transform: rotate(45deg);
+    transform: translateY(0) rotate(45deg);
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger::after {
-    transform: rotate(-45deg);
+    transform: translateY(0) rotate(-45deg);
 }
 
 nav ul {

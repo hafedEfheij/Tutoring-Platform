@@ -63,8 +63,8 @@ window.TutorConnect.auth = {
                     this.currentUser = null;
 
                     // Redirect to login page if not already there
-                    if (!window.location.pathname.includes('login.html')) {
-                        window.location.href = 'login.html';
+                    if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
+                        window.location.href = 'index.html';
                     }
                 } else {
                     // User data was updated in another tab
@@ -235,8 +235,8 @@ window.TutorConnect.auth = {
                 sessionStorage.removeItem('csrfToken');
 
                 // Redirect to login page if not already there
-                if (!window.location.pathname.includes('login.html')) {
-                    window.location.href = 'login.html?session_expired=true';
+                if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
+                    window.location.href = 'index.html?session_expired=true';
                 }
 
                 reject(error);

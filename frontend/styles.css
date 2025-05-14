@@ -693,23 +693,32 @@ legend {
     /* Hide navigation by default on mobile */
     nav ul {
         position: fixed;
-        top: 0;
+        top: 60px; /* Height of the header */
         left: 0;
         width: 100%;
-        height: 100vh;
         background-color: white;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 2rem;
-        transform: translateX(-100%);
+        padding: 1.5rem;
+        gap: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-100%);
         transition: transform 0.3s ease;
         z-index: 15;
+        opacity: 0;
     }
 
     /* Show navigation when mobile menu is expanded */
     .mobile-menu-toggle[aria-expanded="true"] + ul {
-        transform: translateX(0);
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    /* Dark mode support for mobile menu */
+    @media (prefers-color-scheme: dark) {
+        nav ul {
+            background-color: #1f2937;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
     }
 
     nav {

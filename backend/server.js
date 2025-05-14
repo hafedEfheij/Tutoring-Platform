@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const csrf = require('csurf');
+const session = require('express-session');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 
@@ -129,15 +129,62 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || uuidv4();
 const JWT_ACCESS_EXPIRY = '15m'; // Short-lived access tokens
 const JWT_REFRESH_EXPIRY = '7d'; // Longer-lived refresh tokens
 
-// CSRF protection
-const csrfProtection = csrf({ cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-}});
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || uuidv4(),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
-// Apply CSRF protection to all non-GET routes
-app.use((req, res, next) => {
+// Custom CSRF protection middleware
+const csrfTokens = new Map();
+
+function generateCsrfToken(userId) {
+    const token = uuidv4();
+    // Store token with expiration time (1 hour)
+    csrfTokens.set(token, {
+        userId,
+        expires: Date.now() + (60 * 60 * 1000)
+    });
+    return token;
+}
+
+function validateCsrfToken(token, userId) {
+    const tokenData = csrfTokens.get(token);
+
+    // Token doesn't exist
+    if (!tokenData) return false;
+
+    // Token expired
+    if (tokenData.expires < Date.now()) {
+        csrfTokens.delete(token);
+        return false;
+    }
+
+    // Token belongs to different user
+    if (tokenData.userId !== userId) return false;
+
+    return true;
+}
+
+// Clean up expired tokens periodically
+setInterval(() => {
+    const now = Date.now();
+    for (const [token, data] of csrfTokens.entries()) {
+        if (data.expires < now) {
+            csrfTokens.delete(token);
+        }
+    }
+}, 15 * 60 * 1000); // Every 15 minutes
+
+// CSRF protection middleware
+function csrfProtection(req, res, next) {
     // Skip CSRF for login/register routes and non-mutating methods
     if (req.method === 'GET' ||
         req.path === '/api/login' ||
@@ -145,13 +192,22 @@ app.use((req, res, next) => {
         req.path === '/api/refresh-token') {
         return next();
     }
-    csrfProtection(req, res, next);
-});
 
-// Generate CSRF token route
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
-});
+    const token = req.headers['x-csrf-token'];
+    const userId = req.user?.id;
+
+    if (!token || !userId || !validateCsrfToken(token, userId)) {
+        return res.status(403).json({
+            error: 'Invalid CSRF token',
+            code: 'INVALID_CSRF_TOKEN'
+        });
+    }
+
+    next();
+}
+
+// Authentication middleware will be defined below
+// We'll apply CSRF protection after defining authenticateToken
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
@@ -233,6 +289,15 @@ app.post('/api/refresh-token', async (req, res) => {
             code: 'INVALID_REFRESH_TOKEN'
         });
     }
+});
+
+// Now that authenticateToken is defined, apply CSRF protection to API routes
+app.use('/api', csrfProtection);
+
+// Generate CSRF token route
+app.get('/api/csrf-token', authenticateToken, (req, res) => {
+    const token = generateCsrfToken(req.user.id);
+    res.json({ csrfToken: token });
 });
 
 // Routes

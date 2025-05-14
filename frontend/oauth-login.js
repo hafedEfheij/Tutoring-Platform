@@ -13,20 +13,20 @@ window.TutorConnect.oauthLogin = {
         // Create container for OAuth buttons
         const container = document.createElement('div');
         container.className = 'oauth-container';
-        
+
         // Add heading
         const heading = document.createElement('div');
         heading.className = 'oauth-heading';
         heading.innerHTML = '<span>Or sign in with</span>';
         container.appendChild(heading);
-        
+
         // Add buttons container
         const buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'oauth-buttons';
-        
+
         // Add Google button
         const googleButton = document.createElement('a');
-        googleButton.href = '/auth/google';
+        googleButton.href = 'http://localhost:3000/auth/google';
         googleButton.className = 'oauth-button google-button';
         googleButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
@@ -38,10 +38,10 @@ window.TutorConnect.oauthLogin = {
             <span>Google</span>
         `;
         buttonsContainer.appendChild(googleButton);
-        
+
         // Add Facebook button
         const facebookButton = document.createElement('a');
-        facebookButton.href = '/auth/facebook';
+        facebookButton.href = 'http://localhost:3000/auth/facebook';
         facebookButton.className = 'oauth-button facebook-button';
         facebookButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
@@ -50,22 +50,22 @@ window.TutorConnect.oauthLogin = {
             <span>Facebook</span>
         `;
         buttonsContainer.appendChild(facebookButton);
-        
+
         container.appendChild(buttonsContainer);
-        
+
         return container;
     },
-    
+
     // Handle OAuth success callback
     handleCallback: function() {
         // Check if we have a token in the URL
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
-        
+
         if (token) {
             // Store token in sessionStorage
             sessionStorage.setItem('token', token);
-            
+
             // Redirect to dashboard
             window.location.href = '/dashboard.html';
         }
@@ -79,13 +79,13 @@ style.textContent = `
         margin-top: 2rem;
         width: 100%;
     }
-    
+
     .oauth-heading {
         position: relative;
         text-align: center;
         margin-bottom: 1rem;
     }
-    
+
     .oauth-heading span {
         display: inline-block;
         padding: 0 1rem;
@@ -95,7 +95,7 @@ style.textContent = `
         color: var(--text-light);
         font-size: 0.875rem;
     }
-    
+
     .oauth-heading::before {
         content: '';
         position: absolute;
@@ -106,13 +106,13 @@ style.textContent = `
         background-color: var(--border-color);
         z-index: 0;
     }
-    
+
     .oauth-buttons {
         display: flex;
         gap: 1rem;
         justify-content: center;
     }
-    
+
     .oauth-button {
         display: flex;
         align-items: center;
@@ -127,34 +127,34 @@ style.textContent = `
         text-decoration: none;
         transition: background-color 0.2s, border-color 0.2s;
     }
-    
+
     .oauth-button:hover {
         background-color: var(--secondary-color);
     }
-    
+
     .oauth-button svg {
         width: 1.25rem;
         height: 1.25rem;
     }
-    
+
     .google-button:hover {
         border-color: #4285F4;
     }
-    
+
     .facebook-button:hover {
         border-color: #1877F2;
     }
-    
+
     @media (prefers-color-scheme: dark) {
         .oauth-heading span {
             background-color: var(--secondary-color);
         }
-        
+
         .oauth-button {
             background-color: var(--secondary-color);
             color: var(--text-color);
         }
-        
+
         .oauth-button:hover {
             background-color: #2d3748;
         }

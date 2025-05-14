@@ -6,6 +6,15 @@
 // Initialize global namespace
 window.TutorConnect = window.TutorConnect || {};
 
+// Helper function to sanitize strings to prevent XSS
+function sanitizeHTML(str) {
+    if (!str) return '';
+
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
 // UI utilities module
 window.TutorConnect.ui = {
     // Toast notification system
@@ -19,13 +28,13 @@ window.TutorConnect.ui = {
                 container.id = 'toast-container';
                 document.body.appendChild(container);
             }
-            
+
             // Create toast element
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.setAttribute('role', 'alert');
             toast.setAttribute('aria-live', 'assertive');
-            
+
             // Add icon based on type
             let icon = '';
             switch (type) {
@@ -41,45 +50,45 @@ window.TutorConnect.ui = {
                 default:
                     icon = 'ℹ';
             }
-            
-            // Set toast content
+
+            // Set toast content with sanitized message
             toast.innerHTML = `
                 <div class="toast-icon">${icon}</div>
-                <div class="toast-message">${message}</div>
+                <div class="toast-message">${sanitizeHTML(message)}</div>
                 <button class="toast-close" aria-label="Close notification">×</button>
             `;
-            
+
             // Add to container
             container.appendChild(toast);
-            
+
             // Add close button event listener
             const closeBtn = toast.querySelector('.toast-close');
             closeBtn.addEventListener('click', () => {
                 this.dismiss(toast);
             });
-            
+
             // Automatically dismiss after duration
             setTimeout(() => {
                 this.dismiss(toast);
             }, duration);
-            
+
             // Return toast element for potential further manipulation
             return toast;
         },
-        
+
         // Dismiss a toast notification
         dismiss: function(toast) {
             if (!toast) return;
-            
+
             // Add dismissing class for animation
             toast.classList.add('dismissing');
-            
+
             // Remove after animation completes
             setTimeout(() => {
                 if (toast.parentNode) {
                     toast.parentNode.removeChild(toast);
                 }
-                
+
                 // Remove container if empty
                 const container = document.getElementById('toast-container');
                 if (container && container.children.length === 0) {
@@ -88,7 +97,7 @@ window.TutorConnect.ui = {
             }, 300); // Match the CSS transition duration
         }
     },
-    
+
     // Loading indicator
     loader: {
         // Show a loading indicator
@@ -98,12 +107,12 @@ window.TutorConnect.ui = {
             loader.className = 'loader-container';
             loader.setAttribute('role', 'status');
             loader.setAttribute('aria-live', 'polite');
-            
+
             loader.innerHTML = `
                 <div class="loader-spinner"></div>
-                <div class="loader-message">${message}</div>
+                <div class="loader-message">${sanitizeHTML(message)}</div>
             `;
-            
+
             // If target is provided, append to target and make it relative
             if (target) {
                 target.style.position = 'relative';
@@ -113,18 +122,18 @@ window.TutorConnect.ui = {
                 loader.classList.add('loader-fixed');
                 document.body.appendChild(loader);
             }
-            
+
             // Return loader element for later reference
             return loader;
         },
-        
+
         // Hide a loading indicator
         hide: function(loader) {
             if (!loader) return;
-            
+
             // Add dismissing class for animation
             loader.classList.add('dismissing');
-            
+
             // Remove after animation completes
             setTimeout(() => {
                 if (loader.parentNode) {
@@ -133,7 +142,7 @@ window.TutorConnect.ui = {
             }, 300); // Match the CSS transition duration
         }
     },
-    
+
     // Modal dialog
     modal: {
         // Show a modal dialog
@@ -146,7 +155,7 @@ window.TutorConnect.ui = {
                 closable = true,
                 onClose = null
             } = options;
-            
+
             // Create modal container
             const modal = document.createElement('div');
             modal.className = `modal-container modal-${size}`;
@@ -155,58 +164,61 @@ window.TutorConnect.ui = {
             if (title) {
                 modal.setAttribute('aria-labelledby', 'modal-title');
             }
-            
-            // Create modal content
+
+            // Create modal content with sanitized inputs
             let modalHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        ${title ? `<h2 id="modal-title">${title}</h2>` : ''}
+                        ${title ? `<h2 id="modal-title">${sanitizeHTML(title)}</h2>` : ''}
                         ${closable ? `<button class="modal-close" aria-label="Close modal">&times;</button>` : ''}
                     </div>
                     <div class="modal-body">
-                        ${typeof content === 'string' ? content : ''}
+                        ${typeof content === 'string' ? sanitizeHTML(content) : ''}
                     </div>
             `;
-            
+
             // Add buttons if provided
             if (buttons.length > 0) {
                 modalHTML += `<div class="modal-footer">`;
                 buttons.forEach((button, index) => {
                     const { text, type = 'default', id = `modal-btn-${index}` } = button;
-                    modalHTML += `<button id="${id}" class="btn btn-${type}">${text}</button>`;
+                    // Sanitize button text and attributes
+                    const safeId = id.replace(/[^\w-]/g, '');
+                    const safeType = type.replace(/[^\w-]/g, '');
+                    modalHTML += `<button id="${safeId}" class="btn btn-${safeType}">${sanitizeHTML(text)}</button>`;
                 });
                 modalHTML += `</div>`;
             }
-            
+
             modalHTML += `</div>`;
             modal.innerHTML = modalHTML;
-            
+
             // If content is a DOM element, append it to the body
             if (typeof content !== 'string' && content instanceof Element) {
                 modal.querySelector('.modal-body').appendChild(content);
             }
-            
+
             // Add to document
             document.body.appendChild(modal);
-            
+
             // Store original focus
             const previouslyFocusedElement = document.activeElement;
-            
+
             // Set up focus trap
             const focusableElements = modal.querySelectorAll(
                 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
             );
-            
+
             if (focusableElements.length > 0) {
                 // Focus first element
                 focusableElements[0].focus();
-                
+
                 // Set up focus trap
                 modal.addEventListener('keydown', (e) => {
                     if (e.key === 'Tab') {
                         const firstElement = focusableElements[0];
                         const lastElement = focusableElements[focusableElements.length - 1];
-                        
+
                         if (e.shiftKey) {
                             if (document.activeElement === firstElement) {
                                 lastElement.focus();
@@ -221,35 +233,35 @@ window.TutorConnect.ui = {
                     }
                 });
             }
-            
+
             // Close modal function
             const closeModal = () => {
                 // Remove modal
                 document.body.removeChild(modal);
-                
+
                 // Restore focus
                 if (previouslyFocusedElement) {
                     previouslyFocusedElement.focus();
                 }
-                
+
                 // Call onClose callback if provided
                 if (typeof onClose === 'function') {
                     onClose();
                 }
             };
-            
+
             // Add event listeners for close button
             if (closable) {
                 const closeBtn = modal.querySelector('.modal-close');
                 closeBtn.addEventListener('click', closeModal);
-                
+
                 // Close on escape key
                 modal.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
                         closeModal();
                     }
                 });
-                
+
                 // Close on click outside
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
@@ -257,20 +269,20 @@ window.TutorConnect.ui = {
                     }
                 });
             }
-            
+
             // Add event listeners for buttons
             buttons.forEach((button, index) => {
                 const { onClick } = button;
                 const id = button.id || `modal-btn-${index}`;
                 const buttonElement = modal.querySelector(`#${id}`);
-                
+
                 if (buttonElement && typeof onClick === 'function') {
                     buttonElement.addEventListener('click', (e) => {
                         onClick(e, closeModal);
                     });
                 }
             });
-            
+
             // Return modal element and close function
             return {
                 element: modal,

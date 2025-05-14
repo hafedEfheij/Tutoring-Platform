@@ -4,12 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Dashboard Initialized');
 
     // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = sessionStorage.getItem('token');
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
-    if (!token || !user.id) {
+    if (!token) {
         // Redirect to login page if not logged in
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
         return;
     }
 
@@ -131,9 +131,9 @@ function initEventListeners() {
 
                     if (action === 'logout') {
                         // Logout
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        window.location.href = 'login.html';
+                        sessionStorage.removeItem('token');
+                        sessionStorage.removeItem('user');
+                        window.location.href = 'index.html';
                     } else if (action === 'profile') {
                         alert('Profile page would open here');
                     } else if (action === 'settings') {

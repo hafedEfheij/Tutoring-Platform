@@ -6,7 +6,7 @@
     <meta name="description" content="TutorConnect - OAuth Authentication Success">
     <meta name="theme-color" content="#4f46e5">
     <title>Authentication Success | TutorConnect</title>
-    
+
     <!-- Critical CSS inline for faster rendering -->
     <style>
         /* Critical path CSS */
@@ -72,7 +72,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             :root {
@@ -91,7 +91,7 @@
             }
         }
     </style>
-    
+
     <!-- Non-critical CSS with preload -->
     <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="styles.css"></noscript>
@@ -102,7 +102,7 @@
         <h1>Authentication Successful</h1>
         <p>You have successfully authenticated with your account. Redirecting you to the dashboard...</p>
     </div>
-    
+
     <!-- Scripts -->
     <script src="oauth-login.js"></script>
     <script>
@@ -111,11 +111,11 @@
             // Check if we have a token in the URL
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
-            
+
             if (token) {
                 // Store token in sessionStorage
                 sessionStorage.setItem('token', token);
-                
+
                 // Get user info from token
                 try {
                     const tokenParts = token.split('.');
@@ -133,10 +133,21 @@
                 } catch (error) {
                     console.error('Error parsing token:', error);
                 }
-                
+
                 // Redirect to dashboard after a short delay
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    // Check if dashboard.html exists, otherwise redirect to index.html
+                    fetch('dashboard.html')
+                        .then(response => {
+                            if (response.ok) {
+                                window.location.href = 'dashboard.html';
+                            } else {
+                                window.location.href = 'index.html';
+                            }
+                        })
+                        .catch(() => {
+                            window.location.href = 'index.html';
+                        });
                 }, 2000);
             } else {
                 // No token found, redirect to login

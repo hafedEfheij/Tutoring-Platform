@@ -10,8 +10,12 @@ const bcrypt = require('bcrypt');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const passport = require('passport');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
+
+// Load environment variables
+require('dotenv').config();
 
 // Initialize express app
 const app = express();
@@ -90,6 +94,9 @@ async function initializeDatabase() {
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 role TEXT NOT NULL,
+                google_id TEXT,
+                facebook_id TEXT,
+                profile_picture TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -101,6 +108,9 @@ async function initializeDatabase() {
                 start_time TIMESTAMP NOT NULL,
                 end_time TIMESTAMP NOT NULL,
                 status TEXT NOT NULL,
+                description TEXT,
+                recording_url TEXT,
+                whiteboard_data TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (tutor_id) REFERENCES users (id),
                 FOREIGN KEY (student_id) REFERENCES users (id)
@@ -114,6 +124,43 @@ async function initializeDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (session_id) REFERENCES sessions (id),
                 FOREIGN KEY (sender_id) REFERENCES users (id)
+            );
+
+            CREATE TABLE IF NOT EXISTS tutor_profiles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                bio TEXT,
+                subjects TEXT,
+                hourly_rate REAL,
+                availability TEXT,
+                education TEXT,
+                experience TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            );
+
+            CREATE TABLE IF NOT EXISTS student_profiles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                bio TEXT,
+                interests TEXT,
+                education_level TEXT,
+                learning_goals TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            );
+
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                reviewer_id INTEGER NOT NULL,
+                reviewee_id INTEGER NOT NULL,
+                rating INTEGER NOT NULL,
+                comment TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES sessions (id),
+                FOREIGN KEY (reviewer_id) REFERENCES users (id),
+                FOREIGN KEY (reviewee_id) REFERENCES users (id)
             );
         `);
 
@@ -142,13 +189,31 @@ app.use(session({
     }
 }));
 
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Configure Passport strategies
+require('./passport-config')(passport);
+
+// Make db available to routes
+app.use(async (req, res, next) => {
+    if (!app.locals.db) {
+        app.locals.db = await open({
+            filename: path.join(__dirname, 'database.sqlite'),
+            driver: sqlite3.Database
+        });
+    }
+    next();
+});
+
 // Custom CSRF protection middleware
-const csrfTokens = new Map();
+global.csrfTokens = new Map();
 
 function generateCsrfToken(userId) {
     const token = uuidv4();
     // Store token with expiration time (1 hour)
-    csrfTokens.set(token, {
+    global.csrfTokens.set(token, {
         userId,
         expires: Date.now() + (60 * 60 * 1000)
     });
@@ -156,14 +221,14 @@ function generateCsrfToken(userId) {
 }
 
 function validateCsrfToken(token, userId) {
-    const tokenData = csrfTokens.get(token);
+    const tokenData = global.csrfTokens.get(token);
 
     // Token doesn't exist
     if (!tokenData) return false;
 
     // Token expired
     if (tokenData.expires < Date.now()) {
-        csrfTokens.delete(token);
+        global.csrfTokens.delete(token);
         return false;
     }
 
@@ -176,9 +241,9 @@ function validateCsrfToken(token, userId) {
 // Clean up expired tokens periodically
 setInterval(() => {
     const now = Date.now();
-    for (const [token, data] of csrfTokens.entries()) {
+    for (const [token, data] of global.csrfTokens.entries()) {
         if (data.expires < now) {
-            csrfTokens.delete(token);
+            global.csrfTokens.delete(token);
         }
     }
 }, 15 * 60 * 1000); // Every 15 minutes
@@ -300,12 +365,18 @@ app.get('/api/csrf-token', authenticateToken, (req, res) => {
     res.json({ csrfToken: token });
 });
 
+// Import auth routes
+const authRoutes = require('./auth-routes');
+
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// Auth routes with rate limiting
+// Use auth routes
+app.use('/auth', authRoutes);
+
+// Legacy auth routes (to be removed after migration)
 app.post('/api/register', authLimiter, async (req, res) => {
     try {
         const { name, email, password, role } = req.body;

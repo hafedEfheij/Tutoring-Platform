@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TutorConnect - OAuth Authentication Success">
+    <meta name="theme-color" content="#4f46e5">
+    <title>Authentication Success | TutorConnect</title>
+    
+    <!-- Critical CSS inline for faster rendering -->
+    <style>
+        /* Critical path CSS */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-color: #f9fafb;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--secondary-color);
+        }
+        .container {
+            max-width: 500px;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+            color: var(--success-color);
+        }
+        h1 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        p {
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+        }
+        .loader {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(79, 70, 229, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #6366f1;
+                --primary-hover: #4f46e5;
+                --secondary-color: #111827;
+                --text-color: #f9fafb;
+                --text-light: #9ca3af;
+                --border-color: #374151;
+            }
+            body {
+                background-color: #111827;
+            }
+            .container {
+                background-color: #1f2937;
+            }
+        }
+    </style>
+    
+    <!-- Non-critical CSS with preload -->
+    <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <h1>Authentication Successful</h1>
+        <p>You have successfully authenticated with your account. Redirecting you to the dashboard...</p>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="oauth-login.js"></script>
+    <script>
+        // Handle OAuth callback
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if we have a token in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (token) {
+                // Store token in sessionStorage
+                sessionStorage.setItem('token', token);
+                
+                // Get user info from token
+                try {
+                    const tokenParts = token.split('.');
+                    if (tokenParts.length === 3) {
+                        const payload = JSON.parse(atob(tokenParts[1]));
+                        if (payload) {
+                            // Store user info
+                            sessionStorage.setItem('user', JSON.stringify({
+                                id: payload.id,
+                                email: payload.email,
+                                role: payload.role
+                            }));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing token:', error);
+                }
+                
+                // Redirect to dashboard after a short delay
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } else {
+                // No token found, redirect to login
+                window.location.href = 'login.html?error=auth_failed';
+            }
+        });
+    </script>
+</body>
+</html>

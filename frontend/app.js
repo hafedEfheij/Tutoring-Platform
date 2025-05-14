@@ -286,6 +286,7 @@ function showLoginModal() {
                 <p>Don't have an account? <a href="#" id="switch-to-signup">Sign up</a></p>
             </div>
         </form>
+        <div id="oauth-login-container"></div>
     `;
 
     // Use UI utilities modal if available
@@ -299,6 +300,13 @@ function showLoginModal() {
 
         // Get the form element
         const loginForm = modal.element.querySelector('#login-form');
+
+        // Add OAuth login buttons if available
+        const oauthContainer = modal.element.querySelector('#oauth-login-container');
+        if (oauthContainer && window.TutorConnect.oauthLogin) {
+            const oauthButtons = window.TutorConnect.oauthLogin.init();
+            oauthContainer.appendChild(oauthButtons);
+        }
 
         // Add event listener for switch to signup
         const switchToSignupLink = modal.element.querySelector('#switch-to-signup');
@@ -624,6 +632,7 @@ function showSignupModal() {
                 <p>Already have an account? <a href="#" id="switch-to-login">Login</a></p>
             </div>
         </form>
+        <div id="oauth-signup-container"></div>
     `;
 
     // Use UI utilities if available
@@ -637,6 +646,13 @@ function showSignupModal() {
 
         // Get the form element
         const signupForm = modal.element.querySelector('#signup-form');
+
+        // Add OAuth login buttons if available
+        const oauthContainer = modal.element.querySelector('#oauth-signup-container');
+        if (oauthContainer && window.TutorConnect.oauthLogin) {
+            const oauthButtons = window.TutorConnect.oauthLogin.init();
+            oauthContainer.appendChild(oauthButtons);
+        }
 
         // Add event listener for switch to login
         const switchToLoginLink = modal.element.querySelector('#switch-to-login');

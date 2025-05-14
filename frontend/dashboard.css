@@ -247,12 +247,26 @@
     font-weight: 500;
 }
 
+.logout-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+}
+
+.logout-btn:hover {
+    color: var(--error-color);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .stats-cards {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .tutor-cards {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -262,35 +276,35 @@
     .dashboard-container {
         flex-direction: column;
     }
-    
+
     .sidebar {
         width: 100%;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
         padding: 1rem 0;
     }
-    
+
     .sidebar-menu {
         display: flex;
         overflow-x: auto;
         padding: 0 1rem;
     }
-    
+
     .sidebar-menu li {
         margin-bottom: 0;
         margin-right: 0.5rem;
     }
-    
+
     .session-card {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .session-time, .session-details {
         width: 100%;
         margin-bottom: 1rem;
     }
-    
+
     .tutor-cards {
         grid-template-columns: 1fr;
     }

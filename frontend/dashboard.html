@@ -144,5 +144,61 @@
     </div>
 
     <script src="dashboard.js"></script>
+    <script src="oauth-login.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in
+            const token = sessionStorage.getItem('token');
+
+            if (!token) {
+                // Redirect to login page if not logged in
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Parse user data from token
+            try {
+                const tokenParts = token.split('.');
+                if (tokenParts.length === 3) {
+                    const payload = JSON.parse(atob(tokenParts[1]));
+                    if (payload) {
+                        // Update user info in UI
+                        const userNameElement = document.querySelector('.user-name');
+                        if (userNameElement && payload.name) {
+                            userNameElement.textContent = payload.name;
+                        } else if (userNameElement && payload.email) {
+                            userNameElement.textContent = payload.email.split('@')[0];
+                        }
+
+                        // Store user info
+                        sessionStorage.setItem('user', JSON.stringify({
+                            id: payload.id,
+                            email: payload.email,
+                            role: payload.role
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.error('Error parsing token:', error);
+            }
+
+            // Add logout functionality
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.className = 'logout-btn';
+                logoutBtn.textContent = 'Logout';
+                logoutBtn.addEventListener('click', () => {
+                    // Clear session storage
+                    sessionStorage.removeItem('token');
+                    sessionStorage.removeItem('user');
+
+                    // Redirect to home page
+                    window.location.href = 'index.html';
+                });
+                userMenu.appendChild(logoutBtn);
+            }
+        });
+    </script>
 </body>
 </html>

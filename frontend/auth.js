@@ -19,8 +19,8 @@ window.TutorConnect.auth = {
     // Initialize auth module
     init: function() {
         try {
-            // Check if user data exists in localStorage
-            const userData = localStorage.getItem('user');
+            // Check if user data exists in sessionStorage (more secure than localStorage)
+            const userData = sessionStorage.getItem('user');
             if (userData) {
                 const user = JSON.parse(userData);
 
@@ -53,7 +53,8 @@ window.TutorConnect.auth = {
 
     // Set up security event listeners
     _setupSecurityEventListeners: function() {
-        // Listen for storage events to detect when localStorage changes in another tab
+        // Note: sessionStorage doesn't trigger storage events in other tabs
+        // But we'll keep this for compatibility with any localStorage usage
         window.addEventListener('storage', (event) => {
             if (event.key === 'user' && event.newValue !== event.oldValue) {
                 if (!event.newValue) {
@@ -84,6 +85,20 @@ window.TutorConnect.auth = {
                     .catch(error => console.warn('Token refresh failed on visibility change:', error));
             }
         });
+
+        // Add security check for session timeout
+        const sessionCheckInterval = setInterval(() => {
+            if (this.isAuthenticated) {
+                // Check if session is still valid
+                this.refreshToken()
+                    .catch(error => {
+                        console.warn('Session expired:', error);
+                        clearInterval(sessionCheckInterval);
+                    });
+            } else {
+                clearInterval(sessionCheckInterval);
+            }
+        }, 5 * 60 * 1000); // Check every 5 minutes
     },
 
     // Login user
@@ -94,10 +109,12 @@ window.TutorConnect.auth = {
                 method: 'POST',
                 body: { email, password }
             }).then(data => {
-                // Store user data and CSRF token
-                localStorage.setItem('user', JSON.stringify(data.user));
+                // Store user data and CSRF token in sessionStorage (more secure than localStorage)
+                sessionStorage.setItem('user', JSON.stringify(data.user));
                 if (data.csrfToken) {
                     this.csrfToken = data.csrfToken;
+                    // Store CSRF token in a secure way
+                    sessionStorage.setItem('csrfToken', data.csrfToken);
                 }
 
                 this.isAuthenticated = true;
@@ -106,8 +123,13 @@ window.TutorConnect.auth = {
                 // Start token refresh timer
                 this._startTokenRefreshTimer();
 
+                // Log login for security auditing
+                console.info('User logged in:', data.user.email);
+
                 resolve(data.user);
             }).catch(error => {
+                // Log failed login attempts for security monitoring
+                console.warn('Login failed:', email);
                 reject(error);
             });
         });
@@ -121,10 +143,12 @@ window.TutorConnect.auth = {
                 method: 'POST',
                 body: userData
             }).then(data => {
-                // Store user data and CSRF token
-                localStorage.setItem('user', JSON.stringify(data.user));
+                // Store user data and CSRF token in sessionStorage
+                sessionStorage.setItem('user', JSON.stringify(data.user));
                 if (data.csrfToken) {
                     this.csrfToken = data.csrfToken;
+                    // Store CSRF token in a secure way
+                    sessionStorage.setItem('csrfToken', data.csrfToken);
                 }
 
                 this.isAuthenticated = true;
@@ -133,8 +157,12 @@ window.TutorConnect.auth = {
                 // Start token refresh timer
                 this._startTokenRefreshTimer();
 
+                // Log registration for security auditing
+                console.info('User registered:', data.user.email);
+
                 resolve(data.user);
             }).catch(error => {
+                console.warn('Registration failed:', userData.email);
                 reject(error);
             });
         });
@@ -147,8 +175,9 @@ window.TutorConnect.auth = {
             this._mockApiCall('/api/logout', {
                 method: 'POST'
             }).then(() => {
-                // Clear local storage
-                localStorage.removeItem('user');
+                // Clear session storage
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('csrfToken');
 
                 // Clear auth state
                 this.isAuthenticated = false;
@@ -161,12 +190,16 @@ window.TutorConnect.auth = {
                     this._tokenRefreshTimer = null;
                 }
 
+                // Log logout for security auditing
+                console.info('User logged out');
+
                 resolve();
             }).catch(error => {
                 console.error('Logout error:', error);
 
-                // Even if the API call fails, clear local state
-                localStorage.removeItem('user');
+                // Even if the API call fails, clear session state
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('csrfToken');
                 this.isAuthenticated = false;
                 this.currentUser = null;
                 this.csrfToken = null;
@@ -189,6 +222,7 @@ window.TutorConnect.auth = {
             }).then(data => {
                 if (data.csrfToken) {
                     this.csrfToken = data.csrfToken;
+                    sessionStorage.setItem('csrfToken', data.csrfToken);
                 }
                 resolve();
             }).catch(error => {
@@ -197,7 +231,13 @@ window.TutorConnect.auth = {
                 // If refresh fails, user needs to login again
                 this.isAuthenticated = false;
                 this.currentUser = null;
-                localStorage.removeItem('user');
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('csrfToken');
+
+                // Redirect to login page if not already there
+                if (!window.location.pathname.includes('login.html')) {
+                    window.location.href = 'login.html?session_expired=true';
+                }
 
                 reject(error);
             });
@@ -280,9 +320,16 @@ window.TutorConnect.auth = {
 
     // Ensure we have a CSRF token
     _ensureCsrfToken: function() {
-        // If we already have a token, return it
+        // First check if we have a token in memory
         if (this.csrfToken) {
             return Promise.resolve(this.csrfToken);
+        }
+
+        // Then check if we have a token in sessionStorage
+        const storedToken = sessionStorage.getItem('csrfToken');
+        if (storedToken) {
+            this.csrfToken = storedToken;
+            return Promise.resolve(storedToken);
         }
 
         // Otherwise, fetch a new token
@@ -297,10 +344,25 @@ window.TutorConnect.auth = {
         })
         .then(data => {
             this.csrfToken = data.csrfToken;
+            // Store in sessionStorage for persistence
+            sessionStorage.setItem('csrfToken', data.csrfToken);
             return this.csrfToken;
         })
         .catch(error => {
             console.error('Error getting CSRF token:', error);
+
+            // If we can't get a token and we're authenticated, this might indicate a session issue
+            if (this.isAuthenticated) {
+                console.warn('Authentication issue detected, refreshing token...');
+                this.refreshToken().catch(() => {
+                    // If refresh fails, clear authentication state
+                    this.isAuthenticated = false;
+                    this.currentUser = null;
+                    sessionStorage.removeItem('user');
+                    sessionStorage.removeItem('csrfToken');
+                });
+            }
+
             return null; // Return null if we can't get a token
         });
     },
@@ -596,6 +658,13 @@ function checkAuthStatus() {
     if (window.TutorConnect.auth.isAuthenticated) {
         // User is already logged in, redirect to dashboard
         window.location.href = 'dashboard.html';
+    } else {
+        // Check URL parameters for session expired message
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('session_expired')) {
+            // Show session expired message
+            showError('login-error', 'Your session has expired. Please log in again.');
+        }
     }
 
     // Performance tracking

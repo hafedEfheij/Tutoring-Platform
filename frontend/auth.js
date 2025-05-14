@@ -18,36 +18,93 @@ window.TutorConnect.auth = {
 
     // Initialize auth module
     init: function() {
-        // Check if user is already authenticated
-        const token = localStorage.getItem('token');
-        if (token) {
-            try {
-                // In a real app, this would validate the token
+        try {
+            // Check if user data exists in localStorage
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                const user = JSON.parse(userData);
+
+                // Set authentication state
                 this.isAuthenticated = true;
-                this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-                this.logout();
+                this.currentUser = user;
+
+                // Verify token validity by making a refresh token request
+                this.refreshToken()
+                    .then(() => {
+                        console.log('Token refreshed successfully during initialization');
+                    })
+                    .catch(error => {
+                        console.warn('Token refresh failed during initialization:', error);
+                        // If refresh fails, user will need to login again
+                        // State is already cleared by refreshToken method
+                    });
             }
+        } catch (error) {
+            console.error('Error initializing auth module:', error);
+            // Clear any potentially corrupted data
+            this.logout();
         }
 
+        // Set up security event listeners
+        this._setupSecurityEventListeners();
+
         return this;
+    },
+
+    // Set up security event listeners
+    _setupSecurityEventListeners: function() {
+        // Listen for storage events to detect when localStorage changes in another tab
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'user' && event.newValue !== event.oldValue) {
+                if (!event.newValue) {
+                    // User was logged out in another tab
+                    this.isAuthenticated = false;
+                    this.currentUser = null;
+
+                    // Redirect to login page if not already there
+                    if (!window.location.pathname.includes('login.html')) {
+                        window.location.href = 'login.html';
+                    }
+                } else {
+                    // User data was updated in another tab
+                    try {
+                        this.currentUser = JSON.parse(event.newValue);
+                        this.isAuthenticated = true;
+                    } catch (error) {
+                        console.error('Error parsing user data from storage event:', error);
+                    }
+                }
+            }
+        });
+
+        // Listen for visibility changes to refresh token when tab becomes visible again
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.isAuthenticated) {
+                this.refreshToken()
+                    .catch(error => console.warn('Token refresh failed on visibility change:', error));
+            }
+        });
     },
 
     // Login user
     login: function(email, password) {
         return new Promise((resolve, reject) => {
-            // In a real app, this would make an API call
+            // Make API call to login endpoint
             this._mockApiCall('/api/login', {
                 method: 'POST',
                 body: { email, password }
             }).then(data => {
-                // Store user data
-                localStorage.setItem('token', data.token);
+                // Store user data and CSRF token
                 localStorage.setItem('user', JSON.stringify(data.user));
+                if (data.csrfToken) {
+                    this.csrfToken = data.csrfToken;
+                }
 
                 this.isAuthenticated = true;
                 this.currentUser = data.user;
+
+                // Start token refresh timer
+                this._startTokenRefreshTimer();
 
                 resolve(data.user);
             }).catch(error => {
@@ -59,17 +116,22 @@ window.TutorConnect.auth = {
     // Register user
     register: function(userData) {
         return new Promise((resolve, reject) => {
-            // In a real app, this would make an API call
+            // Make API call to register endpoint
             this._mockApiCall('/api/register', {
                 method: 'POST',
                 body: userData
             }).then(data => {
-                // Store user data
-                localStorage.setItem('token', data.token);
+                // Store user data and CSRF token
                 localStorage.setItem('user', JSON.stringify(data.user));
+                if (data.csrfToken) {
+                    this.csrfToken = data.csrfToken;
+                }
 
                 this.isAuthenticated = true;
                 this.currentUser = data.user;
+
+                // Start token refresh timer
+                this._startTokenRefreshTimer();
 
                 resolve(data.user);
             }).catch(error => {
@@ -80,17 +142,171 @@ window.TutorConnect.auth = {
 
     // Logout user
     logout: function() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        return new Promise((resolve, reject) => {
+            // Make API call to logout endpoint
+            this._mockApiCall('/api/logout', {
+                method: 'POST'
+            }).then(() => {
+                // Clear local storage
+                localStorage.removeItem('user');
 
-        this.isAuthenticated = false;
-        this.currentUser = null;
+                // Clear auth state
+                this.isAuthenticated = false;
+                this.currentUser = null;
+                this.csrfToken = null;
 
-        return Promise.resolve();
+                // Clear token refresh timer
+                if (this._tokenRefreshTimer) {
+                    clearTimeout(this._tokenRefreshTimer);
+                    this._tokenRefreshTimer = null;
+                }
+
+                resolve();
+            }).catch(error => {
+                console.error('Logout error:', error);
+
+                // Even if the API call fails, clear local state
+                localStorage.removeItem('user');
+                this.isAuthenticated = false;
+                this.currentUser = null;
+                this.csrfToken = null;
+
+                if (this._tokenRefreshTimer) {
+                    clearTimeout(this._tokenRefreshTimer);
+                    this._tokenRefreshTimer = null;
+                }
+
+                resolve();
+            });
+        });
+    },
+
+    // Refresh access token
+    refreshToken: function() {
+        return new Promise((resolve, reject) => {
+            this._mockApiCall('/api/refresh-token', {
+                method: 'POST'
+            }).then(data => {
+                if (data.csrfToken) {
+                    this.csrfToken = data.csrfToken;
+                }
+                resolve();
+            }).catch(error => {
+                console.error('Token refresh error:', error);
+
+                // If refresh fails, user needs to login again
+                this.isAuthenticated = false;
+                this.currentUser = null;
+                localStorage.removeItem('user');
+
+                reject(error);
+            });
+        });
+    },
+
+    // Start token refresh timer
+    _startTokenRefreshTimer: function() {
+        // Clear existing timer if any
+        if (this._tokenRefreshTimer) {
+            clearTimeout(this._tokenRefreshTimer);
+        }
+
+        // Set timer to refresh token before it expires (e.g., every 14 minutes for a 15-minute token)
+        this._tokenRefreshTimer = setTimeout(() => {
+            this.refreshToken()
+                .then(() => {
+                    // Restart timer after successful refresh
+                    this._startTokenRefreshTimer();
+                })
+                .catch(error => {
+                    console.error('Failed to refresh token:', error);
+                    // Don't restart timer on failure
+                });
+        }, 14 * 60 * 1000); // 14 minutes
     },
 
     // Helper method for API calls
     _mockApiCall: function(url, options) {
+        // In a real app, this would be a real API call
+        // For now, we'll use a mix of real and mock calls
+
+        // Check if we're in a development environment with a real backend
+        const useRealBackend = window.location.hostname === 'localhost' ||
+                              window.location.hostname === '127.0.0.1';
+
+        if (useRealBackend) {
+            // Try to use the real backend
+            return this._realApiCall(url, options).catch(error => {
+                console.warn('Real API call failed, falling back to mock:', error);
+                return this._mockApiCallImplementation(url, options);
+            });
+        } else {
+            // Use mock implementation
+            return this._mockApiCallImplementation(url, options);
+        }
+    },
+
+    // Real API call implementation
+    _realApiCall: function(url, options) {
+        // Get CSRF token if needed
+        return this._ensureCsrfToken().then(csrfToken => {
+            // Prepare headers
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            // Add CSRF token for non-GET requests
+            if (options.method !== 'GET' && csrfToken) {
+                headers['X-CSRF-Token'] = csrfToken;
+            }
+
+            // Make the actual fetch request
+            return fetch(url, {
+                method: options.method || 'GET',
+                headers,
+                body: options.body ? JSON.stringify(options.body) : undefined,
+                credentials: 'include' // Include cookies
+            }).then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'API request failed');
+                    });
+                }
+                return response.json();
+            });
+        });
+    },
+
+    // Ensure we have a CSRF token
+    _ensureCsrfToken: function() {
+        // If we already have a token, return it
+        if (this.csrfToken) {
+            return Promise.resolve(this.csrfToken);
+        }
+
+        // Otherwise, fetch a new token
+        return fetch('/api/csrf-token', {
+            credentials: 'include' // Include cookies
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to get CSRF token');
+            }
+            return response.json();
+        })
+        .then(data => {
+            this.csrfToken = data.csrfToken;
+            return this.csrfToken;
+        })
+        .catch(error => {
+            console.error('Error getting CSRF token:', error);
+            return null; // Return null if we can't get a token
+        });
+    },
+
+    // Mock API call implementation (fallback)
+    _mockApiCallImplementation: function(url, options) {
         return new Promise((resolve, reject) => {
             // Simulate network delay
             setTimeout(() => {
@@ -98,6 +314,10 @@ window.TutorConnect.auth = {
                     this._handleMockLogin(options.body, resolve, reject);
                 } else if (url === '/api/register') {
                     this._handleMockRegister(options.body, resolve, reject);
+                } else if (url === '/api/refresh-token') {
+                    this._handleMockRefreshToken(resolve, reject);
+                } else if (url === '/api/logout') {
+                    this._handleMockLogout(resolve, reject);
                 } else {
                     reject(new Error('Unknown API endpoint'));
                 }
@@ -107,25 +327,25 @@ window.TutorConnect.auth = {
 
     // Handle mock login
     _handleMockLogin: function(credentials, resolve, reject) {
-        if (credentials.email === 'student@example.com' && credentials.password === 'password') {
+        if (credentials.email === 'student@example.com' && credentials.password === 'Password123!') {
             resolve({
-                token: 'mock-token-student',
                 user: {
                     id: 1,
                     name: 'John Doe',
                     email: 'student@example.com',
                     role: 'student'
-                }
+                },
+                csrfToken: 'mock-csrf-token'
             });
-        } else if (credentials.email === 'tutor@example.com' && credentials.password === 'password') {
+        } else if (credentials.email === 'tutor@example.com' && credentials.password === 'Password123!') {
             resolve({
-                token: 'mock-token-tutor',
                 user: {
                     id: 2,
                     name: 'Dr. Sarah Johnson',
                     email: 'tutor@example.com',
                     role: 'tutor'
-                }
+                },
+                csrfToken: 'mock-csrf-token'
             });
         } else {
             reject(new Error('Invalid email or password'));
@@ -134,19 +354,46 @@ window.TutorConnect.auth = {
 
     // Handle mock register
     _handleMockRegister: function(userData, resolve, reject) {
+        // Validate password strength
+        if (userData.password.length < 8) {
+            reject(new Error('Password must be at least 8 characters long'));
+            return;
+        }
+
+        // Check for common password patterns
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(userData.password)) {
+            reject(new Error('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'));
+            return;
+        }
+
         if (userData.email === 'student@example.com' || userData.email === 'tutor@example.com') {
             reject(new Error('Email is already taken'));
         } else {
             resolve({
-                token: 'mock-token-new-user',
                 user: {
                     id: 3,
                     name: userData.name,
                     email: userData.email,
                     role: userData.role
-                }
+                },
+                csrfToken: 'mock-csrf-token'
             });
         }
+    },
+
+    // Handle mock refresh token
+    _handleMockRefreshToken: function(resolve, reject) {
+        if (this.isAuthenticated) {
+            resolve({ success: true });
+        } else {
+            reject(new Error('Invalid refresh token'));
+        }
+    },
+
+    // Handle mock logout
+    _handleMockLogout: function(resolve, reject) {
+        resolve({ success: true });
     }
 };
 

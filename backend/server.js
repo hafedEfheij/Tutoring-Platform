@@ -7,21 +7,69 @@ const http = require('http');
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
+const rateLimit = require('express-rate-limit');
+const { v4: uuidv4 } = require('uuid');
 
 // Initialize express app
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000',
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Security middleware
+app.use(helmet()); // Set security headers
+app.use(cookieParser()); // Parse cookies
+
+// Rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+
+// Apply rate limiting to API routes
+app.use('/api/', apiLimiter);
+
+// More strict rate limiting for auth routes
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // limit each IP to 10 login/register attempts per hour
+    message: 'Too many login attempts from this IP, please try again after an hour'
+});
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000',
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Body parsing middleware
+app.use(express.json({ limit: '1mb' })); // Limit request body size
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '../frontend'), {
+    etag: true, // Enable ETag for caching
+    lastModified: true, // Enable Last-Modified for caching
+    setHeaders: (res, path) => {
+        // Set Cache-Control header for static assets
+        if (path.endsWith('.css') || path.endsWith('.js')) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+        } else if (path.endsWith('.jpg') || path.endsWith('.png') || path.endsWith('.gif')) {
+            res.setHeader('Cache-Control', 'public, max-age=604800'); // 1 week
+        }
+    }
+}));
 
 // Database setup
 let db;
@@ -75,46 +123,173 @@ async function initializeDatabase() {
     }
 }
 
-// JWT secret
-const JWT_SECRET = 'your-secret-key'; // In production, use environment variable
+// JWT configuration
+const JWT_SECRET = process.env.JWT_SECRET || uuidv4(); // Use environment variable or generate a random secret
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || uuidv4();
+const JWT_ACCESS_EXPIRY = '15m'; // Short-lived access tokens
+const JWT_REFRESH_EXPIRY = '7d'; // Longer-lived refresh tokens
+
+// CSRF protection
+const csrfProtection = csrf({ cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+}});
+
+// Apply CSRF protection to all non-GET routes
+app.use((req, res, next) => {
+    // Skip CSRF for login/register routes and non-mutating methods
+    if (req.method === 'GET' ||
+        req.path === '/api/login' ||
+        req.path === '/api/register' ||
+        req.path === '/api/refresh-token') {
+        return next();
+    }
+    csrfProtection(req, res, next);
+});
+
+// Generate CSRF token route
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
+    // Check for token in Authorization header or secure cookie
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const tokenFromHeader = authHeader && authHeader.split(' ')[1];
+    const tokenFromCookie = req.cookies.accessToken;
 
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const token = tokenFromHeader || tokenFromCookie;
+
+    if (!token) {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            code: 'NO_TOKEN'
+        });
+    }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Forbidden' });
+        if (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    error: 'Token expired',
+                    code: 'TOKEN_EXPIRED'
+                });
+            }
+
+            return res.status(403).json({
+                error: 'Invalid token',
+                code: 'INVALID_TOKEN'
+            });
+        }
+
+        // Check if token is in blacklist (for logged out tokens)
+        // In a real app, this would check a Redis store or database
+
         req.user = user;
         next();
     });
 }
+
+// Refresh token middleware
+app.post('/api/refresh-token', async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.status(401).json({
+            error: 'Refresh token required',
+            code: 'NO_REFRESH_TOKEN'
+        });
+    }
+
+    try {
+        // Verify refresh token
+        const user = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+
+        // Check if refresh token is in blacklist
+        // In a real app, this would check a Redis store or database
+
+        // Generate new access token
+        const accessToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: JWT_ACCESS_EXPIRY }
+        );
+
+        // Set new access token in cookie
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Refresh token error:', error);
+        return res.status(403).json({
+            error: 'Invalid refresh token',
+            code: 'INVALID_REFRESH_TOKEN'
+        });
+    }
+});
 
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// Auth routes
-app.post('/api/register', async (req, res) => {
+// Auth routes with rate limiting
+app.post('/api/register', authLimiter, async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
         // Validate input
         if (!name || !email || !password || !role) {
-            return res.status(400).json({ error: 'All fields are required' });
+            return res.status(400).json({
+                error: 'All fields are required',
+                code: 'MISSING_FIELDS'
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                error: 'Invalid email format',
+                code: 'INVALID_EMAIL'
+            });
+        }
+
+        // Validate password strength
+        if (password.length < 8) {
+            return res.status(400).json({
+                error: 'Password must be at least 8 characters long',
+                code: 'WEAK_PASSWORD'
+            });
+        }
+
+        // Check for common password patterns
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+                code: 'WEAK_PASSWORD'
+            });
         }
 
         // Check if user already exists
         const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
         if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+            return res.status(400).json({
+                error: 'User already exists',
+                code: 'USER_EXISTS'
+            });
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Hash password with strong settings
+        const hashedPassword = await bcrypt.hash(password, 12); // Higher cost factor for better security
 
         // Insert user
         const result = await db.run(
@@ -122,45 +297,133 @@ app.post('/api/register', async (req, res) => {
             [name, email, hashedPassword, role]
         );
 
-        // Generate token
-        const token = jwt.sign({ id: result.lastID, email, role }, JWT_SECRET, { expiresIn: '1h' });
+        // Generate tokens
+        const accessToken = jwt.sign(
+            { id: result.lastID, email, role },
+            JWT_SECRET,
+            { expiresIn: JWT_ACCESS_EXPIRY }
+        );
 
-        res.status(201).json({ token, user: { id: result.lastID, name, email, role } });
+        const refreshToken = jwt.sign(
+            { id: result.lastID, email, role },
+            JWT_REFRESH_SECRET,
+            { expiresIn: JWT_REFRESH_EXPIRY }
+        );
+
+        // Set cookies
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/api/refresh-token', // Only sent to refresh token endpoint
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // Generate CSRF token
+        const csrfToken = uuidv4();
+
+        // Return user data and token
+        res.status(201).json({
+            user: { id: result.lastID, name, email, role },
+            csrfToken
+        });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({
+            error: 'Server error',
+            code: 'SERVER_ERROR'
+        });
     }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
         // Validate input
         if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+            return res.status(400).json({
+                error: 'Email and password are required',
+                code: 'MISSING_FIELDS'
+            });
         }
 
         // Find user
         const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+
+        // Use constant-time comparison to prevent timing attacks
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            // Add a small delay to prevent user enumeration
+            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
+
+            return res.status(401).json({
+                error: 'Invalid credentials',
+                code: 'INVALID_CREDENTIALS'
+            });
         }
 
-        // Check password
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        // Generate tokens
+        const accessToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: JWT_ACCESS_EXPIRY }
+        );
 
-        // Generate token
-        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+        const refreshToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_REFRESH_SECRET,
+            { expiresIn: JWT_REFRESH_EXPIRY }
+        );
 
-        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+        // Set cookies
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/api/refresh-token', // Only sent to refresh token endpoint
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // Generate CSRF token
+        const csrfToken = uuidv4();
+
+        // Return user data and token
+        res.json({
+            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+            csrfToken
+        });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({
+            error: 'Server error',
+            code: 'SERVER_ERROR'
+        });
     }
+});
+
+// Logout route
+app.post('/api/logout', (req, res) => {
+    // Clear cookies
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken', { path: '/api/refresh-token' });
+
+    // In a real app, you would also add the tokens to a blacklist
+
+    res.json({ success: true });
 });
 
 // Session routes

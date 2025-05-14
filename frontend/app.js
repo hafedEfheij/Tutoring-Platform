@@ -1,38 +1,116 @@
 /**
  * TutorConnect Main JavaScript
  * Handles common functionality across the platform
+ * Optimized for performance with code splitting
  */
 
-// DOM Elements
-const loginBtn = document.getElementById('login-btn');
-const signupBtn = document.getElementById('signup-btn');
+// Performance measurement
+if (window.performance && window.performance.mark) {
+    window.performance.mark('js_init_start');
+}
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('TutorConnect App Initialized');
+// Use IIFE for better scoping and avoid global namespace pollution
+(function() {
+    'use strict';
 
-    // Initialize mobile menu toggle
-    initMobileMenu();
+    // Lazy load modules
+    const modules = {
+        // Store module loading promises
+        _cache: {},
 
-    // Initialize accessibility features
-    initAccessibility();
+        // Load a module dynamically
+        load: function(name) {
+            if (!this._cache[name]) {
+                this._cache[name] = new Promise((resolve) => {
+                    // In a real app, this would use dynamic imports
+                    // For this demo, we'll simulate module loading
+                    setTimeout(() => {
+                        console.log(`Module ${name} loaded`);
+                        resolve(window.TutorConnect[name]);
+                    }, 0);
+                });
+            }
+            return this._cache[name];
+        }
+    };
 
-    // Login button click event
-    if (loginBtn) {
-        loginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            showLoginModal();
-        });
+    // Initialize global namespace
+    window.TutorConnect = window.TutorConnect || {};
+
+    // DOM Elements - use function to defer execution until needed
+    const getElements = () => ({
+        loginBtn: document.getElementById('login-btn'),
+        signupBtn: document.getElementById('signup-btn')
+    });
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('TutorConnect App Initialized');
+
+        if (window.performance && window.performance.mark) {
+            window.performance.mark('dom_ready');
+            window.performance.measure('js_to_dom_ready', 'js_init_start', 'dom_ready');
+        }
+
+        // Initialize core features immediately
+        initMobileMenu();
+        initAccessibility();
+
+        // Initialize event listeners with performance optimization
+        const elements = getElements();
+
+        // Login button click event - lazy load the auth module
+        if (elements.loginBtn) {
+            elements.loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Show loading indicator
+                const loadingIndicator = createLoadingIndicator();
+                document.body.appendChild(loadingIndicator);
+
+                // Load auth module and show login modal
+                modules.load('auth').then(() => {
+                    document.body.removeChild(loadingIndicator);
+                    showLoginModal();
+                });
+            });
+        }
+
+        // Signup button click event - lazy load the auth module
+        if (elements.signupBtn) {
+            elements.signupBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Show loading indicator
+                const loadingIndicator = createLoadingIndicator();
+                document.body.appendChild(loadingIndicator);
+
+                // Load auth module and show signup modal
+                modules.load('auth').then(() => {
+                    document.body.removeChild(loadingIndicator);
+                    showSignupModal();
+                });
+            });
+        }
+
+        // Report performance metrics
+        if (window.performance && window.performance.getEntriesByType) {
+            setTimeout(() => {
+                const perfEntries = window.performance.getEntriesByType('measure');
+                console.log('Performance metrics:', perfEntries);
+            }, 1000);
+        }
+    });
+
+    // Create loading indicator
+    function createLoadingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'loading-indicator';
+        indicator.setAttribute('aria-label', 'Loading');
+        indicator.setAttribute('role', 'status');
+        indicator.innerHTML = '<div class="spinner"></div>';
+        return indicator;
     }
-
-    // Signup button click event
-    if (signupBtn) {
-        signupBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSignupModal();
-        });
-    }
-});
 
 /**
  * Initialize mobile menu functionality

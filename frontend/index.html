@@ -4,10 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="TutorConnect - Connect with expert tutors for personalized one-on-one learning sessions">
+    <meta name="theme-color" content="#4f46e5">
     <title>Micro-Learning & Tutoring Platform | TutorConnect</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Preconnect to improve performance -->
-    <link rel="preconnect" href="https://via.placeholder.com">
+
+    <!-- Performance optimizations -->
+    <link rel="preconnect" href="https://via.placeholder.com" crossorigin>
+    <link rel="dns-prefetch" href="https://via.placeholder.com">
+
+    <!-- Critical CSS inline for faster rendering -->
+    <style>
+        /* Critical path CSS */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-color: #f9fafb;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary-color);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+            transition: top 0.2s;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        header {
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+        }
+    </style>
+
+    <!-- Non-critical CSS with preload -->
+    <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
 </head>
 <body>
     <header role="banner">
@@ -169,6 +223,58 @@
     <!-- Add skip to main content link for keyboard users -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
+    <!-- Performance optimized script loading -->
+    <script>
+        // Inline script for performance monitoring
+        window.performance && window.performance.mark && window.performance.mark('app_start');
+
+        // Add browser detection for optimizations
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            document.documentElement.classList.add('mobile');
+        }
+    </script>
+
+    <!-- Main application script with defer for non-blocking loading -->
     <script src="app.js" defer></script>
+
+    <!-- Preload important scripts that might be needed later -->
+    <link rel="prefetch" href="login.html">
+    <link rel="prefetch" href="dashboard.html">
+
+    <!-- Intersection Observer polyfill for older browsers -->
+    <script>
+        // Lazy load images that are not already using the loading="lazy" attribute
+        document.addEventListener('DOMContentLoaded', () => {
+            if ('IntersectionObserver' in window) {
+                const imgObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            const src = img.getAttribute('data-src');
+                            if (src) {
+                                img.src = src;
+                                img.removeAttribute('data-src');
+                            }
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                // Get all images with data-src attribute
+                const lazyImages = document.querySelectorAll('img[data-src]');
+                lazyImages.forEach(img => {
+                    imgObserver.observe(img);
+                });
+            } else {
+                // Fallback for browsers that don't support IntersectionObserver
+                const lazyImages = document.querySelectorAll('img[data-src]');
+                lazyImages.forEach(img => {
+                    img.src = img.getAttribute('data-src');
+                    img.removeAttribute('data-src');
+                });
+            }
+        });
+    </script>
 </body>
 </html>

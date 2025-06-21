@@ -80,3 +80,5 @@ A lightweight real-time tutoring platform that connects students with tutors for
 - Audio controls
 - Screen sharing
 
+## License
+This project is licensed under the ISC License

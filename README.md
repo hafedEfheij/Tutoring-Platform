@@ -1,15 +1,4 @@
 
-# Micro-Learning & Tutoring Platform
-
-A lightweight real-time tutoring platform that connects students with tutors for one-on-one sessions.
-
-
-## Core Features
-- Live video sessions (WebRTC)
-- Interactive whiteboard with drawing tools
-- Scheduler & reminders
-- User authentication
-- Real-time chat
 
 ## Technology Stack
 - Frontend: HTML, CSS, JavaScript

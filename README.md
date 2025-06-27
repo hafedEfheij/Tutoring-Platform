@@ -1,6 +1,6 @@
 # Micro-Learning  & Tutoring Platform
 
-A lightweight real-time tutoring platform that connects students with tutors for one-on-one sessions.
+A  real-time tutoring platform that connects students with tutors for one-on-one sessions.
 
 
 
